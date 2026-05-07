@@ -3,6 +3,8 @@
 > The case for programmable on-chain privacy. Twenty-two cases. One detective.
 > No prior knowledge required.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F0xStarny%2FCodex.zk&project-name=codex-zk&repository-name=codex-zk)
+
 Codex.zk is a gamified, interactive web experience that explains *why* the
 [Aztec Network](https://aztec.network/) and the
 [Noir](https://noir-lang.org/) language matter, what problems they solve,
@@ -72,6 +74,30 @@ Build:
 npm run build
 npm run preview
 ```
+
+## Deploy to Vercel
+
+The repo is preconfigured for Vercel. One-click deploy:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F0xStarny%2FCodex.zk&project-name=codex-zk&repository-name=codex-zk)
+
+Or via the Vercel CLI:
+
+```bash
+npm i -g vercel
+vercel        # preview deploy
+vercel --prod # production deploy
+```
+
+Vercel auto-detects:
+
+- **Framework:** Vite
+- **Build command:** `npm run build`
+- **Output directory:** `dist`
+- **Install command:** `npm install`
+
+These are also pinned explicitly in [`vercel.json`](./vercel.json), along with
+long-cache headers for hashed `assets/*` files and a SPA fallback rewrite.
 
 ---
 

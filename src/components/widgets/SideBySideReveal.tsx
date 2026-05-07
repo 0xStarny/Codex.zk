@@ -13,7 +13,7 @@ interface Props {
 export function SideBySideReveal({ description, accentColor }: Props) {
   const rows = parseRows(description);
   const [revealed, setRevealed] = useState(0);
-  const done = revealed >= rows.length;
+  const done = revealed >= rows.body.length;
 
   return (
     <div className="my-2">
