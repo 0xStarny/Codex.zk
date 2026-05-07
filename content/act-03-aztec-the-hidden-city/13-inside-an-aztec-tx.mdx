@@ -1,0 +1,266 @@
+---
+act: 3
+number: 13
+slug: "inside-an-aztec-tx"
+title: "Inside an Aztec Transaction"
+tagline: "Step by step: how a single private transaction goes from your laptop to finality on Ethereum."
+estimatedMinutes: 9
+prerequisites: ["public-private-hybrid", "noir-the-universal-language", "native-account-abstraction", "aztec-vs-the-field"]
+codexCard:
+  concept: "The anatomy of a private Aztec transaction"
+  oneLine: "Private execution on the user's device, recursive aggregation by sequencers, single proof posted to Ethereum L1."
+  why: "It collapses every architectural concept of Act III into one concrete flow."
+---
+
+## Hook
+
+*Noiro is back at his desk in the temple chamber. A whiteboard. A marker. He draws a horizontal line across the board, then divides it into segments.*
+
+"Last case of Act III. Time to make the abstract real. We're going to walk one private transaction from the moment you click 'send' on a private payment, all the way through to the moment that transaction is permanently settled on Ethereum. Every step. Every actor. Every piece of data — what's visible, what's hidden, where the proof gets generated, where it gets verified."
+
+*He uncaps the marker.*
+
+"By the end of this case, you should be able to draw this from memory."
+
+*He starts drawing.*
+
+---
+
+## Beat 1 — Setup: Alice Wants To Send A Private Transfer
+
+Let's pin down the scenario.
+
+Alice has a wallet on Aztec. Her wallet contains, among other things, a private balance of a token — let's call it `pUSDC` (private USDC) — represented internally as a set of encrypted "notes" that only Alice can decrypt.
+
+Alice wants to send 100 pUSDC privately to Bob. Bob has his own Aztec wallet. Bob's address is something like an Aztec account contract address, but Alice's wallet doesn't share Bob's identity with the chain — only Bob's *receiving capability* (a public encryption key tied to his account).
+
+Alice opens her wallet, types Bob's address, types `100 pUSDC`, clicks **Send**.
+
+The next few minutes — actually, the next few seconds — are what this investigation unpacks.
+
+[INTERACTIVE: animation] The screen shows Alice's wallet UI in the foreground. Click `Send` and a multi-stage animation begins. Each stage is paused for the user to read about; clicking "Next" advances.
+
+---
+
+## Beat 2 — Stage 1: Private Execution On Alice's Device
+
+The first stage happens **entirely on Alice's local device**.
+
+Alice's wallet runs the relevant Aztec contract function locally. This is the Noir-defined `transfer` function we sketched in Investigation 9. The wallet:
+
+1. Reads Alice's encrypted notes for pUSDC. The wallet has Alice's private decryption key, so it can see the underlying values. The chain cannot.
+2. Selects which notes to spend (e.g. one note for 75 pUSDC, one for 30 pUSDC, totaling 105 — slightly more than the amount she's sending).
+3. Constructs the new notes that the transaction will create:
+   - A new note for 100 pUSDC, encrypted to Bob's public key.
+   - A "change" note for 5 pUSDC, encrypted back to Alice (the leftover from spending 105 to send 100).
+4. Generates **nullifiers** for the notes being spent. A nullifier is a deterministic, one-way value derived from the note + Alice's secret. It marks the notes as "spent" without revealing which specific notes they were.
+5. Generates the **ZK proof** that all of the above was done correctly:
+   - Alice owned the spent notes.
+   - The notes were unspent at the time of the transaction.
+   - The new notes' total value equals the spent notes' total value (no inflation).
+   - The transaction was authorized by Alice's account contract.
+
+Crucially: **the chain never sees any of the underlying values, balances, identities, or note contents**. It will only see:
+
+- The nullifiers (so it can mark the notes as spent and reject double-spends).
+- The new note **commitments** (cryptographic hashes that lock in the new notes — encrypted contents, recoverable only by recipients).
+- The encrypted note payloads (so Bob, scanning the chain, can find the note for him and decrypt it).
+- The ZK proof.
+- Any public-state effects (in this scenario, none).
+
+That bundle is the **Aztec transaction**. It is small. It reveals nothing about Alice, Bob, or the amount.
+
+[INTERACTIVE: reveal] Six cards labeled with each piece of the transaction bundle. The user clicks each to see (a) what's in it, (b) who can read it, (c) what would break if it were missing. By the end, they have a mental model of the full transaction artifact.
+
+---
+
+## Beat 3 — Stage 2: The Transaction Hits The Mempool
+
+Alice's wallet broadcasts the transaction to the Aztec network. It enters a public mempool.
+
+Anyone watching the mempool can see:
+
+- That an Aztec transaction was submitted.
+- The size of the transaction.
+- Roughly when it was submitted.
+
+Anyone watching the mempool **cannot** see:
+
+- Who Alice is.
+- Who Bob is.
+- The amount being transferred.
+- The asset being transferred.
+- Any public state Alice's wallet may also be touching (in this case, none).
+- Any pattern that links this transaction to Alice's other transactions (assuming her wallet is using fresh, well-isolated nullifiers).
+
+Notice the contrast with Ethereum. On Ethereum, a wallet's mempool transaction broadcasts the sender, recipient, contract method, and parameters in plaintext. On Aztec, the mempool sees only that *some Aztec transaction occurred*. The MEV-bot landscape that depends on reading user intent is structurally defanged for private Aztec transactions: there's nothing to read.
+
+(Public Aztec transactions — say, an interaction with a fully-public DEX — have similar mempool visibility to Ethereum. The privacy property only applies to the parts of the transaction that touch private state.)
+
+---
+
+## Beat 4 — Stage 3: A Sequencer Picks It Up
+
+Aztec uses sequencers to order and bundle transactions into blocks. A sequencer is a network participant whose job is to assemble valid transactions into a block, run public execution, generate a block-level proof, and submit it to L1.
+
+When a sequencer picks Alice's transaction:
+
+1. It runs the **public execution** part of the transaction. In this scenario, there's no public-state component — but if there were (say, a pUSDC mint affecting `total_supply`), the sequencer would update the relevant public variables, just like a normal smart contract VM does.
+
+2. It verifies Alice's submitted **private proof**. This is a SNARK verification — fast, deterministic, runs in milliseconds.
+
+3. It **aggregates** Alice's proof together with other private proofs from other users in the same block, using the recursive proving we covered in Investigation 7. The aggregated proof attests to the validity of all included private transactions plus the public-state transitions.
+
+4. It posts:
+   - The aggregated block proof.
+   - The new state roots (commitment tree root, nullifier tree root, public state root).
+   - Any data necessary for users to reconstruct their own private state (Bob will need to scan for his new note).
+   - Encrypted note payloads (the encrypted note for Bob, posted as data on L1).
+
+[INTERACTIVE: simulator] A sequencer's-eye view: a stream of arriving transactions, each verified as a proof, aggregated recursively into a tree, ending with a single root proof. The user can pause and inspect any node in the tree to see "what is the sequencer learning at this step?" — answer: never the underlying values, only that proofs verify.
+
+---
+
+## Beat 5 — Stage 4: Settlement On Ethereum L1
+
+Aztec is a Layer 2 rollup on Ethereum. The block proof, plus the necessary data, is posted to a contract on Ethereum L1. The L1 contract:
+
+1. Verifies the block proof. (One SNARK verification on Ethereum, not millions.)
+2. Updates the canonical state roots Aztec is committed to.
+3. Persists the data — including encrypted notes — needed for users to read their own state.
+
+After this transaction is confirmed on Ethereum, the Aztec block (and Alice's transaction within it) has **L1 finality**. From this moment, the transaction's validity inherits Ethereum's security: as cryptographically secure as the L1 itself.
+
+This is the structural reason Aztec settles to Ethereum: the chain inherits Ethereum's economic security and decentralization without reproducing them. Aztec doesn't need its own validator set the size of Ethereum's; the L1 is doing that work, and Aztec borrows it via the rollup mechanism.
+
+---
+
+## Beat 6 — Stage 5: Bob Discovers His Note
+
+Bob's wallet, running on Bob's device, is independently watching the chain. When it sees the new block, it scans the encrypted note payloads. Most are not for Bob — they don't decrypt under his key.
+
+One of them — the note for 100 pUSDC Alice sent — does decrypt. Bob's wallet now knows: there's a new note worth 100 pUSDC owned by him, with the note commitment in the chain's commitment tree.
+
+Bob's UI updates: **"+100 pUSDC received."**
+
+Bob did not need to be online when Alice sent. He didn't need to confirm anything. He didn't need to participate in the transaction at all. He simply scanned the chain (or asked a service to scan for him, with privacy-preserving techniques) and discovered his new note.
+
+This is the receive flow. It is asynchronous, push-style at the chain level, pull-style at the wallet level. It works exactly like checking your bank account, except every step is enforced by mathematics.
+
+[INTERACTIVE: animation] Bob's device on the right, the Aztec chain on the left. The chain shows new blocks rolling in. Bob's device pulls each block, scans encrypted payloads, decrypts the one meant for him, and shows the credit in the UI. The animation makes clear: the chain doesn't know which note belonged to Bob. Only Bob's key reveals it.
+
+---
+
+## Beat 7 — Reading The Whole Picture
+
+Step back. Here's the entire transaction summarized in one diagram.
+
+```
+[Alice's device]                                [The chain]                     [L1 Ethereum]
+─────────────────                               ────────────                    ──────────────
+1. Read encrypted notes
+2. Build private function call
+3. Generate proof
+4. Build tx bundle  ────────────► Mempool (sees: opaque tx)
+                                       │
+                                       ▼
+                                  Sequencer
+                                  - verifies proof
+                                  - aggregates with others
+                                  - generates block proof  ──────────►  L1 verifier
+                                                                          - verifies one proof
+                                                                          - updates state roots
+                                                                          - persists encrypted data
+                                                                                     │
+                                                                                     ▼
+[Bob's device]                                                                Block confirmed
+─────────────                                                                       │
+5. Scan new encrypted payloads ◄────────────────────────────────────────────────────┘
+6. Decrypt the one for him
+7. Update UI (+100 pUSDC)
+```
+
+What is **public** along this entire journey:
+
+- That a transaction occurred.
+- The aggregated block proof.
+- The state roots.
+- Encrypted note payloads (visible as ciphertext, not readable except by the recipient).
+- Any public-state changes.
+
+What is **private**:
+
+- Alice's identity (beyond what her account contract structurally reveals).
+- Bob's identity (likewise).
+- The amount.
+- The asset (in some setups; depends on the contract's design).
+- Alice's other balances.
+- Bob's other balances.
+- Which specific notes were spent.
+
+This is the system you've been reading about for nine investigations now. It is **real**, **deployed**, and **mathematically grounded**. None of it requires trusting a hardware vendor. None of it requires trusting a multi-party committee. The cryptography does all the heavy lifting.
+
+---
+
+## Reveal
+
+The anatomy of an Aztec private transaction:
+
+1. **Private execution** runs on the user's own device. Private state is read, modified, and used to generate a proof. The chain sees nothing of the underlying values.
+2. **The transaction bundle** consists of nullifiers, note commitments, encrypted payloads, public effects, and a proof — all small, all opaque except to the right keys.
+3. **A sequencer** verifies the proof, aggregates it with other transactions' proofs (recursively), runs the public-state component, and produces a single block proof.
+4. **Ethereum L1** verifies the block proof, persists the state roots, and confirms finality.
+5. **Recipients** discover their notes by scanning the chain locally, decrypting only what their keys reveal.
+
+This flow collapses every concept from Act III into a single, concrete, end-to-end pipeline. **The user's private state never leaves the user's device.** The chain never holds plaintext private values. The L1 verifies one proof per block — independent of how many private transactions were inside.
+
+We've finished mapping the chain. The architecture is real. The cryptography is real. The language is real.
+
+The question that's been sitting under all of this — *but what becomes possible because of it?* — is what Act IV is for. We've spent five cases describing the system. Now we look at what people actually *do* with it.
+
+*Noiro caps the marker. Steps back. The whiteboard is full.*
+
+"Out the door, kid. Pack your stuff. Act IV is downtown — applications, real-world, daily-life territory. The temples were the technical foundation. Now we go see what the city does with it."
+
+## Codex Card
+
+> **The anatomy of a private Aztec transaction**
+> Private execution on the user's device, recursive aggregation by sequencers, single proof posted to Ethereum L1.
+> *Why it matters: it collapses every architectural concept of Act III into one concrete flow.*
+
+## Code (optional)
+
+```rust
+// The minimal user-side flow, in pseudocode.
+// (Real Aztec.js library calls have more glue; this is the shape.)
+
+async function sendPrivatePUSDC(amount, recipient) {
+  // 1. Read my notes
+  const myNotes = await wallet.getNotes("pUSDC");
+  const selectedNotes = pickNotes(myNotes, amount);
+
+  // 2. Build the change & recipient notes
+  const total = sum(selectedNotes);
+  const changeNote = createNote(myAddress, total - amount);
+  const recipientNote = createNote(recipient, amount);
+
+  // 3. Generate proof locally
+  const proof = await generateAztecProof({
+    contract: "pUSDC",
+    function: "transfer",
+    privateInputs: { notes: selectedNotes, recipient, amount },
+    publicInputs: { /* any public state effects */ },
+  });
+
+  // 4. Build & broadcast the transaction
+  const tx = {
+    nullifiers: selectedNotes.map(nullify),
+    commitments: [changeNote, recipientNote].map(commit),
+    encryptedPayloads: encryptForRecipients([changeNote, recipientNote]),
+    proof,
+  };
+  await aztec.broadcast(tx);
+}
+```
+
+*Annotation: Notice what's local and what's network. Steps 1–3 happen on the user's device, with the user's secrets, generating a single small proof. Step 4 broadcasts the proof + opaque artifacts. The chain verifies. Nothing about the underlying transfer is revealed in transit.*

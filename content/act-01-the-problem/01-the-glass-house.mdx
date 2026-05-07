@@ -1,0 +1,169 @@
+---
+act: 1
+number: 1
+slug: "the-glass-house"
+title: "The Glass House"
+tagline: "Every transaction you've ever made on Ethereum is in plain sight."
+estimatedMinutes: 7
+prerequisites: []
+codexCard:
+  concept: "Public-by-default chains"
+  oneLine: "Ethereum was designed so anyone, forever, can read any transaction."
+  why: "It's a feature for auditability — but a flaw for everything else."
+---
+
+## Hook
+
+*Noiro flips a damp folder open on the table. A bulb buzzes overhead. The light cuts the desk in two.*
+
+"Take a seat, kid. You been on Ethereum a year now? Two? Doesn't matter."
+
+*He taps a thick stack of printouts.*
+
+"Every move you ever made — every swap, every NFT, every dApp you logged into — sitting right here. A stranger walks in off the street, asks me 'what does this wallet own, where did it spend last Tuesday, how much it's worth today' — and the chain doesn't even hesitate to answer."
+
+*He lights a cigarette. The smoke catches the light.*
+
+"That's the case. Not whether it's public. **Why we ever thought that was fine.**"
+
+---
+
+## Beat 1 — The Witness Who Talks Too Much
+
+*Noiro slides a single page across.*
+
+"Etherscan. Free, public, indexed. Type any wallet address into that little search bar — yours, mine, your aunt's — and you get a complete confession."
+
+Every transaction on Ethereum carries the same five things in the open: **the sender's address**, **the receiver's address**, **the amount**, **the contract being called**, and **the timestamp**. None of them are encrypted. None of them disappear. They are written into the chain in plain text and copied to thousands of nodes around the world. Forever.
+
+*He takes a drag.*
+
+"You ever heard the phrase 'on-chain'? That's what it means. On the chain. In the open. For good."
+
+[INTERACTIVE: reveal] A mock Etherscan transaction row. The user clicks each field — `From`, `To`, `Value`, `Method`, `Block` — and a side panel reveals what each one exposes about the wallet owner. *(Example: clicking `From` shows "Address linked to ENS name `alice.eth`. Connected via cluster analysis to 14 other addresses, three of which received salary deposits from a known crypto exchange.")*
+
+The fact that this works isn't a bug. It's the original design. Ethereum was built to let anyone, anywhere, verify the state of every account at any moment. Public auditability is the whole point of a public blockchain.
+
+Which is great if you're an auditor. Less great if you're, well — anyone else.
+
+---
+
+## Beat 2 — The Twist No One Mentions
+
+"Here's the part nobody warns you about, kid."
+
+*Noiro flicks ash into a glass.*
+
+"You can stop using a wallet. You can move funds out, leave it dormant, never log in again. The chain doesn't care. The history? Still there. Five years from now. Twenty. Whoever has a copy of the ledger has your file."
+
+This is permanence. Once a transaction is mined into a block, it cannot be edited, retracted, or hidden. Even **deleting your private key** — losing access to your own wallet — does nothing to remove your past. The wallet's grave is still readable.
+
+That changes the math on every privacy decision you've ever made.
+
+You posted your wallet address in a Discord in 2021 because you wanted a free NFT? That address is now public, **forever**. Anyone — recruiter, ex-partner, government in a country you might one day live in, hostile actor with a grudge — can look up everything you've ever done with that wallet, from then back to its creation. There is no expiry. There is no "right to be forgotten" on a public chain.
+
+*Noiro stares out the window.*
+
+"Most things in your life, even the bad ones, get to fade. Photos get lost. Old emails get deleted. The chain doesn't fade. The chain remembers like a courthouse vault that anyone can walk into."
+
+---
+
+## Beat 3 — A Day In The Life Of A Public Wallet
+
+"Let me show you what a stranger can put together. Sixty seconds. No tools beyond a free block explorer."
+
+[INTERACTIVE: simulator] The user picks a fictional wallet from three options:
+- **"Alice the part-time DJ"** — uses a hot wallet for streaming tips
+- **"Marcus the founder"** — moves company treasury funds
+- **"Yuki the gamer"** — buys/sells in-game NFTs daily
+
+The simulator runs a short investigative animation showing what an outside observer can deduce from the public ledger in under a minute. Findings are revealed in stages with a "deduce next clue" button. *(Example for Alice: total received this year, biggest single tip, geographic timing patterns suggesting time zone, the exchange where she off-ramps, the address that recently received a large transfer from her — likely a partner or family member, and so on.)*
+
+What makes this possible isn't sophisticated hacking. It's the chain doing exactly what it was designed to do. **Public ledgers leak by default.**
+
+Specialized firms — Chainalysis, TRM Labs, Elliptic, and dozens of smaller ones — make a business of doing this at scale. They cluster addresses, attach real-world identities to them, and sell the resulting profiles to exchanges, governments, and corporations. The wallet you've been using since 2020 is, almost certainly, in someone's database with your name attached.
+
+*Noiro snaps the file shut.*
+
+"The chain's a great witness, kid. Says everything it knows. Never lies. Never shuts up."
+
+---
+
+## Beat 4 — "But Auditability Is Good… Right?"
+
+"Yeah. It is." *Noiro nods, slowly.* "That's the part that makes this case hard."
+
+This is the honest counter-argument, and it deserves a real answer: **public auditability is genuinely valuable**. It's how decentralized finance can prove its solvency without trusting a CEO. It's how a non-profit can prove every donation reached its destination. It's how anyone, anywhere, can verify that a stablecoin is fully backed without taking the issuer's word for it.
+
+If you erased all that, you'd lose something important.
+
+But notice the move that just happened. The argument is: *"because we want auditability for some things, we accept zero privacy for everything."* That's a tradeoff that was made — silently, by default — when the first generation of blockchains shipped. It was a reasonable tradeoff for the engineers building research prototypes in 2014. It's a much weirder tradeoff in 2026, when "the chain" is supposed to host normal people's salaries, savings, identity, votes, and medical records.
+
+The real question isn't "do we want auditability?" It's: *do we have to give up everything to get it?*
+
+[INTERACTIVE: side-by-side] Two columns titled **"What auditability needs"** vs **"What we currently expose."** As the user clicks bullet items in the left column, matching items appear in the right column highlighted in red where the exposure is **more than necessary**. *(e.g. Auditability needs: "the protocol's total reserves match what users deposited." Currently exposes: "every individual user's exact balance, transaction history, and counterparties.")*
+
+The gap between those two columns is the size of the problem. It's the size of this entire investigation.
+
+---
+
+## Beat 5 — The Glass House
+
+*Noiro stands. He walks to the window. Rain on the glass. Below, the street is quiet.*
+
+"Imagine you owned a house. The whole thing — walls, ceiling, floor — made of glass. Clear glass. Your bed. Your bathroom. Your safe. All of it, visible from the street. Anyone walking by can see what's in your fridge, what's on your bank statements, who came over last weekend."
+
+"Now imagine someone tells you: *the glass house is the most secure house ever built. No one can break in without everyone seeing.* And that's true. But you're still in a glass house."
+
+That's Ethereum. The ledger is **incredibly secure** — tamper-proof, distributed, verifiable. And **completely transparent**. Both at once. They're not contradictions. They're the same property, viewed from different angles.
+
+Auditability and privacy are not opposites. They're cousins, separated at birth. The original blockchain design got the first one and assumed we'd figure the second one out later.
+
+*Noiro turns back from the window.*
+
+"For ten years, we tried to bolt privacy onto a system that wasn't built for it. Mixers. Privacy coins. Off-chain workarounds. Every one of them either got banned, got broken, or got too clunky to use." *He picks up his hat.* "That's the next case. The cloak that didn't fit."
+
+---
+
+## Reveal
+
+The foundation of every other investigation in this Codex starts here:
+
+**Public-by-default blockchains are not 'failing at privacy.' They were never trying.**
+
+Ethereum, Bitcoin, and most chains built before 2020 made an explicit design choice — one valid for their original use case (a public, censorship-resistant ledger of transactions verifiable by anyone). That choice has consequences:
+
+- Every transaction you make is permanent and globally readable.
+- Your past is not deletable. There is no expiration.
+- Specialists can — and do — link your wallet to your identity, profession, location, and network of contacts.
+- Auditability is a real benefit. It is **not** a justification for the level of exposure we currently accept.
+
+The next four investigations of Act I show you the workarounds that didn't work — and why the only durable answer turns out to be **rebuilding the privacy primitive from scratch**, on the chain itself.
+
+That's where Aztec and Noir come in. But you're not ready for them yet.
+
+First, you need to see why nothing else stuck.
+
+## Codex Card
+
+> **Public-by-default chains**
+> Ethereum was designed so anyone, forever, can read any transaction.
+> *Why it matters: it's a feature for auditability — and a flaw for everything else.*
+
+## Code (optional)
+
+```solidity
+// On Ethereum, the keyword `private` doesn't actually hide values from observers.
+// It only restricts which contracts can call this function.
+// Every byte of state is still visible to anyone reading the chain.
+
+contract Wallet {
+    mapping(address => uint256) private balances;  // ← "private" is a lie
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;          // ← visible in the tx
+    }
+}
+```
+
+*Annotation: There is no way, in plain Solidity, to write a contract that holds truly secret state. The word `private` is about access control, not confidentiality. To actually hide anything on Ethereum, you have to invent privacy from outside the chain — exactly what the rest of Act I is about.*

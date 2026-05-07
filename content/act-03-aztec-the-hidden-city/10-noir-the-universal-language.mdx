@@ -1,0 +1,207 @@
+---
+act: 3
+number: 10
+slug: "noir-the-universal-language"
+title: "Noir, the Universal Language"
+tagline: "Why a new language for ZK — and why it doesn't tie you to any one chain or proving system."
+estimatedMinutes: 9
+prerequisites: ["public-private-hybrid"]
+codexCard:
+  concept: "Noir as a ZK domain-specific language"
+  oneLine: "Noir is a Rust-flavored language designed to make writing zero-knowledge programs as ergonomic as writing ordinary code — and it's portable across proving systems."
+  why: "It explains why the Aztec team built a new language at all, and why developers are adopting it for use cases far beyond Aztec."
+---
+
+## Hook
+
+*Noiro is in a smaller chamber inside the temple. A scribe's room — paper, ink, oil lamps. He spreads a stack of code printouts on the table.*
+
+"Yesterday we looked at how the chain handles two kinds of state. Today: the language you describe those contracts in."
+
+*He picks up the top sheet.*
+
+"Here's Solidity. Solidity is fine. Solidity is a known language. Solidity has been beat on for ten years by every red-team in cryptocurrency."
+
+*He picks up the second sheet.*
+
+"Here's Cairo. StarkNet's language. Designed for ZK from day one. Powerful, very specific, kind of brutal to learn."
+
+*He picks up a third.*
+
+"Here's Noir. Looks a lot like Rust. Looks almost too easy. Reads like normal code. And the trick — the part most people miss — is what it *isn't tied to*."
+
+*He sets it down on top.*
+
+"Today's case is: why a new language. And the more interesting one: why Noir isn't actually 'Aztec's language' the way Cairo is StarkNet's."
+
+---
+
+## Beat 1 — Why Solidity Doesn't Quite Fit
+
+Solidity is the dominant smart-contract language. There are billions of dollars secured by it, decades of dev hours invested, ecosystem tooling galore. Ironically, **none of that helps for ZK.**
+
+Solidity was designed for a transparent, re-executing virtual machine (the EVM). Every operation in a Solidity contract runs on every node, in plaintext, with every input visible. The language has no notion of "this operation is happening inside a private circuit, with hidden inputs, producing a proof."
+
+You can build privacy *libraries* in Solidity (people have, including for early Aztec versions). But the language itself isn't shaped for the constraints that ZK proving imposes:
+
+- No native concept of **circuits** — the constraint systems that ZK proofs are built on.
+- No native concept of **public vs. private inputs** — the distinction that gives a proof its structure.
+- No first-class support for the **specific arithmetic** that ZK provers operate over (typically a finite field tied to the proof system's elliptic curve).
+- A type system that allows variable-size data structures freely — which is hostile to circuit compilation (where the size has to be known at compile time).
+
+You *can* make Solidity host ZK functionality. You can't make it *natural*.
+
+[INTERACTIVE: reveal] A side-by-side: the same simple ZK program (a hash-preimage check) written in three styles: as a manual ZK circuit using a low-level DSL (Circom), as a Solidity wrapper around a precompiled verifier, and as a Noir program. The user clicks each tab to see how they read.
+
+---
+
+## Beat 2 — The Cairo Detour
+
+The StarkWare team saw the same problem and built **Cairo**. Cairo is designed from the ground up for STARK-style proofs. It's powerful. It powers StarkNet, an entire L2 with billions in TVL. The language has a specific, intentional shape:
+
+- Variables are **immutable by default** (a property called "AIR-friendly" in STARK terminology).
+- Memory is modeled as a non-deterministic read-only array.
+- The arithmetic is built around the prime field of the underlying STARK system.
+
+Cairo is excellent for what it is. It is also **specific**. Programs written in Cairo are tightly bound to the StarkNet execution model, the StarkNet proving system, and the StarkNet runtime. Migrating Cairo code to a different chain or different proving back-end is non-trivial. The language and the chain are designed together.
+
+Aztec's team made a different bet. They wanted a language that:
+
+- **Read like ordinary code.** Familiar syntax, intuitive control flow, types everyone recognizes.
+- **Was decoupled from the proving system.** Programs in this language should be compilable to *any* of the major proving back-ends — PLONK, Halo2, future systems — without rewriting.
+- **Was decoupled from the chain.** The same programs should be useful inside Aztec contracts, but also as standalone proofs, as proofs in browser apps, as proofs in mobile wallets, as proofs in Ethereum smart contract verifiers.
+- **Could grow into a general ZK-DSL** for the broader ecosystem, not just one chain's contract language.
+
+That's Noir.
+
+---
+
+## Beat 3 — What Noir Looks Like
+
+Noir borrows heavily from Rust syntactically. If you've seen Rust, Noir reads almost immediately:
+
+```rust
+fn main(secret: Field, hash: pub Field) {
+    let computed = std::hash::pedersen([secret]);
+    assert(computed[0] == hash);
+}
+```
+
+What's happening here:
+
+- `Field` is a value in the prime field of the proving system. (Analogous to "a number," with constraints that make ZK arithmetic efficient.)
+- `pub` marks an input as **public** — visible to the verifier. Anything not marked `pub` is **private** — known to the prover only.
+- `assert` is the constraint primitive. The proof attests that all `assert` statements hold. If any `assert` fails, no proof can be produced.
+- `std::hash::pedersen` is a standard library function. Noir ships with a real standard library — hash functions, signature schemes, Merkle tree operations, common primitives.
+
+Noir programs are compiled to a generic intermediate representation called **ACIR** (Abstract Circuit Intermediate Representation). ACIR is, by design, not tied to any specific proving back-end. From ACIR, the program can be compiled to:
+
+- **Aztec's Honk back-end** (used inside Aztec contracts).
+- **Barretenberg's UltraPLONK** (used in standalone Noir applications).
+- **Halo2** back-end (research / alternate use cases).
+- Future back-ends as they emerge.
+
+The same Noir program can produce proofs verifiable on Ethereum (via on-chain Solidity verifier), on Aztec (natively), in a browser (using the Noir JavaScript libraries), or on any system that knows how to verify the chosen proof format.
+
+[INTERACTIVE: animation] A simple Noir program at the top. An arrow flows down: "compiles to ACIR." Then ACIR forks into multiple back-ends: PLONK proof for Ethereum, Honk proof for Aztec, browser-side proof for client apps. The user can hover each branch to see what kind of application it enables.
+
+---
+
+## Beat 4 — The "Universal" Bet, Concretely
+
+The reason this matters: **a Noir program is a portable cryptographic artifact, not chain-specific code.**
+
+Picture a few concrete consequences:
+
+**Off-chain proof, on-chain verification.** A user can run a Noir program in their browser — say, "prove I'm over 18 from a government credential I don't want to upload" — and submit just the resulting proof to a smart contract for on-chain verification. No Aztec needed. The smart contract is on Ethereum, Polygon, Arbitrum, or anywhere else that can host a Solidity verifier.
+
+**Reusable circuits across applications.** A circuit that proves "this Merkle path is valid" can be written once and reused across dozens of applications. A circuit that proves "this set of integers sums to a target" can be embedded into voting contracts, lending contracts, gaming contracts. There's a growing ecosystem of open-source Noir libraries the way there's an npm or crates.io ecosystem.
+
+**Local-first cryptographic apps.** Some applications don't even need a chain. A Noir program might let a user prove to a counterparty (a website, a peer, a document signer) some property of their data, without involving any blockchain at all. The proof itself is the artifact. The chain is one of several ways to verify it.
+
+**Migration robustness.** If the underlying proving system changes — and it will, several times, over the next decade — Noir programs come along for the ride. Recompile, redeploy, no rewrite. (Most of the time. Edge cases involving proof format mismatches do exist, but they're relatively contained.)
+
+[INTERACTIVE: side-by-side]
+**Cairo vs. Noir, abstract comparison:**
+| Property | Cairo | Noir |
+|---|---|---|
+| Tied to one chain | Yes (StarkNet) | No |
+| Tied to one proving system | Effectively yes | No |
+| Standalone proofs (no chain) | Awkward | Natural |
+| Verifier on Ethereum L1 | Possible, with adapters | Native (Solidity verifier output) |
+| Browser-side proving | Possible | Native (JS bindings) |
+| Use-case scope | StarkNet contracts | General-purpose ZK programs |
+
+---
+
+## Beat 5 — Why This Matters For Aztec Specifically
+
+Aztec is the marquee use of Noir. But Noir's design is broader than Aztec, and that's a deliberate strategic choice.
+
+By making Noir useful **off-Aztec**, the Aztec team:
+
+- **Grows the developer pool faster** — devs who learn Noir for non-Aztec reasons (e.g. building a standalone ZK proof of identity for an Ethereum dApp) can later author Aztec contracts with no language re-learning.
+- **Reduces lock-in concerns** — institutions adopting Noir for internal applications aren't tied to Aztec's chain succeeding; their code is portable.
+- **Captures the off-chain ZK use case** — a vast and growing space (private credentials, ML proofs, browser-side cryptography) where chain-specific languages don't fit.
+- **Mature the language faster** — usage outside Aztec exposes Noir to a wider variety of patterns and feedback than a chain-specific language would get.
+
+This is in contrast to Cairo's strategy, which has been: tightly couple the language to the chain, optimize the integration, accept that the language stays mostly inside the StarkNet ecosystem. Both strategies are coherent. They're betting on different futures for ZK.
+
+If you believe ZK is a universal computing primitive (verifiable AI, browser-side identity, off-chain compliance, much more), then a chain-specific language under-serves the bigger picture. Noir's design is for that bigger picture.
+
+[INTERACTIVE: reveal] A list of "Noir programs in the wild" — short descriptions of real or emerging open-source Noir applications, none of them on Aztec. Each card explains the use case and what becomes possible. *(e.g.: "Stealth address generator," "Anonymous airdrop claim," "ZK email verifier," "Private set intersection," "Browser-side credential proof," etc.)*
+
+---
+
+## Reveal
+
+Noir is **a ZK programming language designed to be:**
+
+- **Familiar** (Rust-like syntax, ergonomic types, real standard library)
+- **Portable** (compiles to multiple proving back-ends via ACIR, runs in browsers, mobile, contracts)
+- **Aztec-native, but not Aztec-only** (the marquee chain, but not the only target)
+- **Open-source and ecosystem-friendly** (libraries, tooling, examples shared across applications)
+
+This positioning is the second of Aztec's core architectural bets (after hybrid state from Investigation 9). It separates the language from the chain in a way that's structurally different from previous ZK chains, and it's already paying off in adoption: Noir is being used in production for off-chain cryptographic applications well outside Aztec's borders.
+
+For an Aztec contract author, the implication is direct: **the skills you build writing Noir for Aztec are reusable everywhere ZK is used.** That's a different value proposition than "learn this chain's bespoke language."
+
+The next case looks at one more architectural decision — one that affects every user, not every developer. It's about how accounts work. Spoiler: there's no `0x...` address that's just a key pair. Every account on Aztec is, structurally, a smart contract.
+
+That changes a lot.
+
+## Codex Card
+
+> **Noir as a ZK domain-specific language**
+> Noir is a Rust-flavored language designed to make writing zero-knowledge programs as ergonomic as writing ordinary code — and it's portable across proving systems.
+> *Why it matters: it explains why the Aztec team built a new language at all, and why developers are adopting it for use cases far beyond Aztec.*
+
+## Code (optional)
+
+```rust
+// A complete, real Noir program: prove ownership of a Merkle tree leaf
+// without revealing which leaf. Useful for anonymous airdrops, private
+// allowlists, voting, and more — none of which require Aztec specifically.
+
+use dep::std::hash::pedersen_hash;
+
+fn main(
+    leaf: Field,                                // private: my leaf
+    path: [Field; 8],                           // private: sibling hashes along the path
+    indices: [Field; 8],                        // private: left/right at each level
+    root: pub Field,                            // public: the tree's known root
+) {
+    let mut current = leaf;
+    for i in 0..8 {
+        let (left, right) = if indices[i] == 0 {
+            (current, path[i])
+        } else {
+            (path[i], current)
+        };
+        current = pedersen_hash([left, right]);
+    }
+    assert(current == root);
+}
+```
+
+*Annotation: This program proves "I know a leaf in a tree whose root is the public value `root`" — without revealing which leaf. Compile it to ACIR, ship the proof to a Solidity verifier on Ethereum, or use it in an Aztec contract — same source code, same circuit. That portability is the Noir promise.*

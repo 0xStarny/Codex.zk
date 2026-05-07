@@ -1,0 +1,170 @@
+---
+act: 5
+number: 20
+slug: "the-privacy-by-default-web"
+title: "The Privacy-by-Default Web"
+tagline: "When 'private' stops being a setting you have to remember to enable, and becomes the floor every system is built on."
+estimatedMinutes: 8
+prerequisites: ["zkml-verifiable-ai"]
+codexCard:
+  concept: "Privacy as the default, not the exception"
+  oneLine: "The current web is opt-out for privacy; the next decade's primitives make opt-in privacy the floor — and disclosure the exception that requires justification."
+  why: "It reframes the entire privacy conversation from 'feature' to 'baseline,' which is the structural shift Aztec and similar networks are quietly enabling."
+---
+
+## Hook
+
+*Noiro is still on the rooftop. The city below glows with screens. Some on, some off. Each one a window into someone's life.*
+
+"Twenty years ago, kid, the internet was a mostly-public space and you had to opt out — by being careful, by using anonymizers, by not putting your real name on things. The default was exposure with caveats."
+
+*He rubs his cheek.*
+
+"Then came the platforms. Facebook, Google, Amazon. They flipped the model. The default became *give them everything*, with maybe a few opt-outs hidden five clicks deep in your settings. Plenty of people never found those opt-outs. Twenty years on, every interaction we have on a computer is shaped by that default."
+
+*He turns back from the railing.*
+
+"Today's case isn't about cryptography. We did the cryptography. Today's case is about what happens to the shape of the web when you change the default. When 'private' stops being something you have to remember and starts being the floor every system stands on."
+
+---
+
+## Beat 1 — The Default Is The Whole Game
+
+Software systems have defaults. Most users — vast majorities — never change them. The default is, in practice, the system.
+
+The current web's default is: **share by default.**
+
+- You sign up for a service. Your email is the primary identifier. Linked to your real name, your phone, your billing address, your browsing history. The service collects everything; you opt out of specific items at the margin if you bother.
+- You install an app. It requests permissions. You click "Allow" without reading. Your location, your contacts, your camera, your microphone are now harvestable. You opt out of specific permissions at the margin if you bother.
+- You use a search engine. Your queries, your IP, your device fingerprint, your click history are all recorded and used to target ads, refine the model, sell to data brokers. You can switch to a privacy-respecting search engine; almost nobody does.
+- You make a payment. Card networks log the merchant, the amount, the time, the location, the inferred category. Privacy alternatives exist (cash for in-person, certain crypto, certain prepaid mechanisms); they're rarely chosen.
+
+These aren't malicious choices, exactly. They're the path of least resistance under a system that defaults to disclosure. The user can resist; resisting is laborious and incompatible with most service offerings. So almost nobody resists.
+
+[INTERACTIVE: simulator] The user is presented with a hypothetical day's worth of ordinary digital activities (signing up for a service, making a payment, joining a video call, posting a comment). At each step, they see the disclosure model: what's exposed, what alternatives existed, what they'd have to do to choose the alternative. The accumulated exposure across the day is summarized.
+
+---
+
+## Beat 2 — What "Privacy By Default" Means, Concretely
+
+Imagine the default flipped:
+
+- You sign up for a service. Default identifier is a ZK proof of personhood — the service knows you're a unique person, not which person. If you want a richer relationship (loyalty rewards, support escalation, paid tier), you choose to disclose more, on a granular per-interaction basis.
+- You install an app. Permissions default to *no access*. App gets what it can prove it needs through specific ZK or attestation mechanisms ("this app is requesting a one-time location proof at zip-code resolution to confirm it's allowed in your jurisdiction"). You stay in control.
+- You search the web. The default search experience is operator-blind — the search engine sees the query but not the user, with cryptographic guarantees that no profile is being built. Personalization, when wanted, is local: your device assembles your profile and feeds the search engine derived signals, not raw history.
+- You make a payment. Default is private — both parties' identities and the amount are visible only to themselves. Compliance requirements (sanctions checks, threshold reporting) are satisfied via selective disclosure proofs. Disclosure to non-participants happens only when legally compelled.
+
+This flip — from "share by default, opt out at margins" to "private by default, disclose deliberately" — is **the structural shift** that ZK primitives enable. Aztec, ZK identity, ZKML, and adjacent cryptography are the load-bearing pieces of it.
+
+[INTERACTIVE: side-by-side]
+**Current default vs. proposed default:**
+| Activity | Current default | Privacy-by-default version |
+|---|---|---|
+| Service signup | Email + phone + name | ZK proof of personhood |
+| App permissions | Allow on tap | Specific, minimal, time-bound proofs |
+| Search query | Logged, linked to user | Operator-blind, locally personalized |
+| Payment | Card network logs everything | Private, with compliance via selective disclosure |
+| Identity proof | Upload entire ID | Prove specific property only |
+| Voting/governance | Public ballot | Private ballot, public tally |
+
+---
+
+## Beat 3 — The Shift Already Underway
+
+Privacy-by-default isn't a hypothetical future. It's a slow shift already happening in some corners of the web. A few snapshots:
+
+**Browser-level privacy.** Apple's Mail Privacy Protection (no tracking pixels), Safari's Intelligent Tracking Prevention, Firefox's Total Cookie Protection. The default in Apple's ecosystem has been quietly moving from "share" toward "do not share" for most casual users for the better part of a decade.
+
+**End-to-end encryption as default.** Signal, iMessage, WhatsApp, Telegram (in some configurations) — billions of daily messages are end-to-end encrypted by default. Users don't think about it. The default is private.
+
+**Privacy regulations.** GDPR (EU), CCPA (California), and similar laws have moved the default in regulated jurisdictions toward "consent required" rather than "consent assumed." Implementation has been imperfect. The trajectory is toward more privacy-by-default mandates, not fewer.
+
+**Decentralized identity.** Several major efforts (W3C Verifiable Credentials, EU's eIDAS 2.0, ISO mDL) are formalizing privacy-preserving identity primitives. None are yet mainstream-deployed. All are heading toward production.
+
+**Privacy-respecting search.** DuckDuckGo, Brave Search, and a handful of others have shown that search-without-tracking has a real market. Still small market share; growing.
+
+**The crypto contribution.** Aztec, Zcash, Monero, and the broader privacy-coin/privacy-chain ecosystem provide the financial-rail piece of the privacy-by-default web — the layer that's been missing because traditional finance and Web2 have neither the technical primitives nor the will to build it.
+
+[INTERACTIVE: reveal] Six cards, each a real-world privacy-by-default initiative. Each card has its scope, its launch date, its current adoption status, and what it's still missing.
+
+The trend is real. It's slow. It's uneven. It's shipping anyway.
+
+---
+
+## Beat 4 — Why It Has To Be Cryptographic, Not Legal
+
+A natural reaction: *"Couldn't we just regulate this? Legislate that companies stop collecting data they don't need?"*
+
+We've tried that. GDPR was supposed to do it. CCPA was supposed to do it. The actual deployments are uneven — some good actors comply substantively, others use compliance theater while continuing to collect aggressively. Enforcement is patchy. Cross-jurisdictional companies route data through whichever regime is least demanding.
+
+The fundamental issue with regulatory privacy is that it's **trust-based**. The user has to trust the company to honor the regulation. The regulator has to trust their ability to detect and punish non-compliance. The company has to trust that competitors are being similarly constrained. If any of those trust relationships fail — and they often do — the privacy guarantee evaporates.
+
+Cryptographic privacy is **structural**. The privacy property is enforced by mathematics, not by promises. A service that uses ZK identity for sign-up *cannot* see the underlying credential, even if it wanted to, even if a regulator told it to log everything, even if it's compromised by attackers. The data isn't somewhere the service can be coerced into giving up — because the data was never given up in the first place.
+
+This is the structural argument for why cryptographic privacy primitives matter even in a world with privacy laws. The two are complementary, not redundant. Laws set the floor for what's expected; cryptography enforces the floor regardless of who's looking.
+
+[INTERACTIVE: reveal] A comparison: privacy regulations vs. cryptographic privacy primitives. For each property (enforcement mechanism, response to bad actors, cross-jurisdiction validity, breach exposure), the user sees how each approach handles it. Conclusion: complementary, not substitutable.
+
+---
+
+## Beat 5 — Where Aztec Sits In This Picture
+
+Aztec doesn't deliver privacy-by-default-web on its own. No single chain or technology does. It's an ecosystem-wide shift.
+
+But Aztec is one of the **load-bearing pieces** of the financial layer for that ecosystem. Specifically:
+
+- **The first production-grade privacy-preserving smart contract platform** at meaningful scale, with the architectural choices to support real applications (not just payments).
+- **Reusable cryptographic primitives** (Noir as a portable ZK language) that propagate beyond Aztec into the broader Web3 and even Web2 stacks.
+- **A reference architecture** for privacy + auditability hybrid that can be used as a model by other systems (institutional finance, government services, healthcare data, etc.).
+- **A demonstration of feasibility** at an institutional scale, which is necessary to move the conversation past "is this even possible" with the regulators, the conservative institutions, and the cautious technologists who collectively determine adoption.
+
+In a world where privacy-by-default succeeds — where the default user experience of digital systems is private until they choose disclosure — Aztec is one of the chains people transact on. Not the only one. But a structurally important one, because it solved the *programmable privacy with composability* piece that simpler privacy chains didn't.
+
+In a world where privacy-by-default fails — where centralization wins, regulations soften, and the surveillance-as-business-model continues — Aztec still exists, and serves the meaningful subset of users and applications that want privacy. It's a smaller market, but a non-zero one.
+
+The bet behind the chain is on the first world. The Codex you've been reading is, in part, the case for that bet.
+
+---
+
+## Reveal
+
+The privacy-by-default web is a structural shift — from "disclose by default, hide at margins" to "private by default, disclose deliberately." It is happening across multiple fronts (browser policies, regulations, encrypted messaging, decentralized identity, ZK chains) at uneven pace, with no single victory but consistent direction.
+
+Cryptographic primitives like ZK proofs are the **load-bearing layer** of this shift. Regulations alone aren't enough; trust-based privacy collapses under sufficient pressure. Math-based privacy holds.
+
+Aztec is one of the platforms in the financial-and-application layer of this shift. Its specific design choices — hybrid state, native account abstraction, portable ZK language — make it well-suited to be the chain where privacy-aware Web3 applications get built.
+
+This isn't a guaranteed future. It's a possible one. The cryptography is real; the engineering is intense; the cultural and institutional adoption is the rate limit. The next case looks at what specifically becomes economically reorganizable when this shift takes hold.
+
+## Codex Card
+
+> **Privacy as the default, not the exception**
+> The current web is opt-out for privacy; the next decade's primitives make opt-in privacy the floor — and disclosure the exception that requires justification.
+> *Why it matters: it reframes the entire privacy conversation from 'feature' to 'baseline,' which is the structural shift Aztec and similar networks are quietly enabling.*
+
+## Code (optional)
+
+```rust
+// A "minimal disclosure" pattern that recurs across the privacy-by-default web.
+// In Noir-style pseudocode: a service requesting age-gated access.
+
+fn request_access(
+    credential: GovernmentID,                  // private
+    issuer_pubkey: pub Field,                  // public — known issuer
+    today_year: pub Field,                     // public — current year
+    minimum_age: pub Field,                    // public — service's policy
+) {
+    // Verify the credential is signed by the trusted issuer
+    assert(verify_signature(credential, issuer_pubkey));
+
+    // Verify the user meets the age threshold
+    let age = today_year - credential.dob_year;
+    assert(age >= minimum_age);
+
+    // The proof reveals: the user passed the check.
+    // The proof reveals: nothing else about the user.
+    // No name, no exact age, no document image, no address.
+}
+```
+
+*Annotation: This is the fundamental shape. Today, age-gated access requires uploading an ID. Tomorrow, the same access requires only this proof. The user never gives up the credential. The service never holds the data. The result is the same. The exposure surface is dramatically smaller. Multiply this pattern across every interaction in a digital day, and you have the privacy-by-default web.*

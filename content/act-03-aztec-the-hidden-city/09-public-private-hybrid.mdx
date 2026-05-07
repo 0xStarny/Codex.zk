@@ -1,0 +1,209 @@
+---
+act: 3
+number: 9
+slug: "public-private-hybrid"
+title: "Public + Private = Hybrid"
+tagline: "Aztec is the only major chain where some state is private *and* some is public — and they live in the same contract."
+estimatedMinutes: 9
+prerequisites: ["zk-vs-the-alternatives"]
+codexCard:
+  concept: "Aztec's hybrid state model"
+  oneLine: "On Aztec, every contract can have both private state (encrypted, owned by users) and public state (shared, transparent) — and a single transaction can touch both."
+  why: "It's the architectural choice that lets Aztec do things no other ZK chain can do."
+---
+
+## Hook
+
+*The setting changes again. Noiro is in a clearing in a jungle. Stone steps. Vines. The sound of birds. He lights a cigarette under a giant ceiba tree and waves the smoke away.*
+
+"Welcome to Act III, kid. We're past the cryptography. Past the politics. Now we look at one specific city in the privacy world. Aztec."
+
+*He nods at the path through the trees.*
+
+"There are several chains using ZK proofs at this point. Several. But each one made different choices about what kinds of state can live on it, what kinds of programs you can write, what users see. Most of them made one big choice: the entire chain is private, *or* the entire chain is public."
+
+*He points at the temple in the distance.*
+
+"Aztec said: why not both. In the same contract. Same transaction. Stitched together by the protocol. That single decision is the reason we're spending five cases on this network specifically."
+
+*He starts walking up the steps.*
+
+"Come on. The first room of the temple is the one most people miss."
+
+---
+
+## Beat 1 — The Two Models You Already Know
+
+For most of blockchain history, you've had two flavors of chain.
+
+**Fully transparent chains** (Ethereum, Solana, Avalanche, most L1s and L2s): every account, every transaction, every contract's internal state — public. Auditable, composable, transparent. Privacy is a bolt-on, with the limitations we covered in Act I.
+
+**Fully private chains** (Monero, Zcash in shielded mode, Aleo in some configurations): the chain is structurally opaque. Balances are encrypted. Transactions are shielded. Auditability and external composability are reduced.
+
+Both are coherent designs. Both have real use cases. Both have hard limits.
+
+The transparent model, as we saw, can't easily host activity that requires confidentiality (most institutional finance, identity, healthcare, internal corporate operations, anything where leaking your activity is a meaningful cost).
+
+The fully-private model has the opposite problem. Most useful applications — DeFi yield, oracle data feeds, on-chain governance, public goods — require *some* state to be visible to everyone. A lending protocol's total liquidity, an oracle's price feed, a DAO's vote totals. If everything is encrypted, those use cases break.
+
+The honest answer to "do we want public or private" has always been: **we want both**, in the same chain, with control over which is which.
+
+That's the design Aztec specifically went after.
+
+[INTERACTIVE: side-by-side]
+**Three architectural choices:**
+| Model | Privacy | Composability with public DeFi | Auditability primitive | Examples |
+|---|---|---|---|---|
+| Transparent | Bolt-on, weak | High | Built-in (everything visible) | Ethereum, Solana |
+| Fully private | Strong | Low (everything hidden) | Hard (selective disclosure required) | Monero, shielded Zcash |
+| **Hybrid** | **Strong, programmable** | **High** | **Selective by design** | **Aztec** |
+
+---
+
+## Beat 2 — How Hybrid State Looks From The Contract
+
+In a normal Ethereum contract, every state variable lives on the public chain. There's no syntax for "this variable is private to a specific user." If you want privacy, you build it yourself — with hashes, commitments, ZK proofs, or off-chain workarounds.
+
+In an Aztec contract written in Noir, you choose. Every state variable can be declared **public** or **private**:
+
+- **Public state** lives on-chain in plaintext, just like Ethereum. Visible to everyone, modifiable by transactions, queryable by other contracts. Same composability properties as a normal smart contract.
+- **Private state** is owned by a specific user. It's stored as **encrypted notes** that only that user can decrypt and only that user can spend. Modifying private state requires the owner to produce a ZK proof off-chain and submit it; the chain verifies the proof but never sees the underlying value.
+
+[INTERACTIVE: animation] A simple animated contract on screen, with two columns: "Public state" (lit up, visible labels: `total_supply: 1,000,000`) and "Private state" (dark, with locked icons next to each note, labels obscured). The user clicks a "Make a private transfer" button — a small proof animation runs locally, then a single state delta updates: a private note nullified, a new private note created, total_supply unchanged. The chain confirms the transaction. The values inside the private notes never appear on screen, but the diagram makes clear that the chain accepted the change as valid.
+
+This is the mechanic, in shape:
+
+- A **note** is the unit of private state. A note is a piece of encrypted data, plus a commitment posted to the chain.
+- When you "spend" a private note, you submit a **nullifier** — a one-time identifier proving the note has been consumed — and a ZK proof that the spend was authorized. The chain marks the nullifier as used, ensuring no double-spend.
+- New notes can be created in the same transaction. They're posted as commitments, encrypted, with the recipient's public key.
+
+The chain stores: the tree of all commitments, the set of all spent nullifiers, and the (small) public state.
+
+It does **not** store: any plaintext value of any private state, ever.
+
+---
+
+## Beat 3 — The Critical Property: Public And Private In One Transaction
+
+This is the part that matters most, and it's specific to Aztec's architecture.
+
+A single Aztec transaction can:
+
+- Read and write **public** state (e.g. update a public token's total supply).
+- Read and write **private** state of one or more users (e.g. transfer a private balance from sender to recipient).
+- Trigger calls between public and private functions.
+- Compose with other contracts that have their own mix of public and private state.
+
+This is rare. Most ZK chains historically separated "the private chain" and "the public chain" into different layers, with a manual bridge between them. On Aztec, the privacy is not a separate layer — it's a property of individual state variables and individual function calls within a single contract on a single chain.
+
+In practice, this lets you write contracts like:
+
+- **A token whose individual balances are private, but whose total supply is public.** Anyone can verify the total. No one can see who holds how much.
+- **A DEX whose order intent is private (no front-running) but whose total liquidity is public** (so other contracts can compose with it).
+- **A voting contract where individual ballots are private but the running tally is public.** Or, alternatively, where the tally is hidden until polls close. Or where individual ballot eligibility is privately verified but the participation count is public.
+- **A lending protocol whose individual loans are private** (no whale-watching, no targeted manipulation) **but whose aggregate solvency is publicly auditable.**
+
+[INTERACTIVE: simulator] The user picks a contract scenario (private token, private DEX, private voting). The simulator shows the *same* application running in three architectures: Ethereum (everything public), Monero-style (everything private, no composability with public dApps), and Aztec (per-state-variable choice). For each scenario, the user clicks through what's visible to whom — and discovers that Aztec is the only one that supports the realistic mix.
+
+---
+
+## Beat 4 — How The Two Worlds Stay Consistent
+
+A natural worry: if some state is private and some is public, how does the chain ensure they're consistent? Couldn't a malicious user lie about their private state and push a fake update to the public state?
+
+The answer is the structural promise of ZK. **Every state change is gated by a proof.**
+
+When a user submits a transaction that touches private state, they include a ZK proof that:
+
+- They owned the relevant private notes (they have the decryption keys).
+- The notes existed in the commitment tree before the transaction.
+- The proposed new private notes are valid encryptions for the recipients.
+- The associated public state changes are correctly derived from the (private) inputs.
+
+The chain verifies the proof. If the proof is invalid, the transaction is rejected. If the proof is valid, the chain accepts the changes — both private (a new commitment, a spent nullifier) and public (the visible state update).
+
+The honesty of the public state is therefore **anchored in the cryptographic verification**, not in the chain seeing the private inputs. The user is forced to be consistent — they can't generate a valid proof that contradicts itself.
+
+[INTERACTIVE: reveal] An interactive flowchart of a hybrid Aztec transaction. The user steps through: (1) user generates proof locally, (2) submits proof + public input deltas to chain, (3) chain verifies proof, (4) chain applies state changes. Each step is annotated with what is visible vs. private at that moment.
+
+---
+
+## Beat 5 — Two Execution Environments, One Chain
+
+To make hybrid state actually work, Aztec runs **two execution environments**:
+
+**Private execution** runs in the user's own client (browser, wallet). It's where private function calls happen, private state is read and modified, and ZK proofs are generated. The output of private execution is a proof and a small set of "public effects" — calls to public functions, deltas to public state, etc. — that get bundled into the transaction.
+
+**Public execution** runs on the network. It's where public function calls happen and public state is updated. It runs in a more conventional way, similar to the EVM, but its inputs include the verified public effects from the private execution.
+
+A typical transaction flow:
+
+1. User initiates a transaction on their client.
+2. Client runs private execution — calls private functions, reads/writes private notes, generates proof.
+3. Client packages: proof + private state deltas + intended public calls.
+4. Transaction is broadcast to the network.
+5. Sequencer verifies the proof, runs public execution, posts to L1.
+
+This separation is **the architectural innovation** that makes hybrid state practical. Private logic runs where the secrets live (the user's machine). Public logic runs where it makes sense (the chain). They're stitched together by the proof.
+
+*Noiro pauses on the temple step. Ahead, glyphs are carved into a stone wall.*
+
+"That's the thing, kid. Most people see 'private chain' and think one indistinct fog. Aztec drew a line through it. Some things you keep. Some things you share. Same building, different rooms, locked doors between them you control."
+
+---
+
+## Reveal
+
+The architectural distinctive of Aztec is **hybrid state**:
+
+- **Private state**: encrypted notes owned by users, modified through ZK proofs, never plaintext on-chain.
+- **Public state**: traditional shared state, just like Ethereum, fully visible.
+- **Same contract, same transaction, same chain.** Mixed at the variable level, mixed at the function level.
+
+This is a design choice that several other ZK networks deliberately *didn't* make — sticking instead to either fully private (Aleo, Mina with simpler models) or fully public-with-ZK-rollup (Polygon zkEVM, zkSync, StarkNet in their primary modes). Each of those choices is internally consistent. None of them give application designers the same range that hybrid state does.
+
+It's the structural answer to a question that's actually been the main blocker for serious privacy adoption in DeFi, identity, and enterprise on-chain use cases:
+
+> *"How do I keep my own data private, but still participate in public protocols, with public liquidity, with public auditability of aggregates?"*
+
+Hybrid state is the answer. The next four cases of this Act show what it takes to build a full chain around that answer — starting with the language Aztec uses to describe these contracts.
+
+That language is called Noir.
+
+## Codex Card
+
+> **Aztec's hybrid state model**
+> Every contract can have both private state (encrypted, owned by users) and public state (shared, transparent) — and a single transaction can touch both.
+> *Why it matters: it's the architectural choice that lets Aztec do things no other ZK chain can do.*
+
+## Code (optional)
+
+```rust
+// A simplified Noir-style Aztec contract showing hybrid state.
+// (Real Aztec syntax has more boilerplate; this is the shape.)
+
+contract HybridToken {
+    // Public state — visible to all, like an ordinary Ethereum mapping.
+    public total_supply: Field;
+
+    // Private state — encrypted notes owned by individual users.
+    private balances: PrivateMap<Address, Field>;
+
+    // A private function called by the user, in their client.
+    // The chain never sees `amount` or the involved balances.
+    private fn transfer(to: Address, amount: Field) {
+        let sender_balance = balances.get(context.msg_sender);
+        assert(sender_balance >= amount);
+        balances.set(context.msg_sender, sender_balance - amount);
+        balances.set(to, balances.get(to) + amount);
+    }
+
+    // A public function. Visible execution. Updates public state.
+    public fn mint(to: Address, amount: Field) {
+        total_supply = total_supply + amount;
+        // ... emits a private note for `to` to receive `amount` privately.
+    }
+}
+```
+
+*Annotation: The two key keywords are `private` and `public`. They tell the compiler which execution environment a state variable or function lives in. The compiler stitches the two together with the cryptographic plumbing — proofs, commitments, nullifiers — invisibly. Application authors think in terms of "is this thing public or private?" and the chain handles the rest.*

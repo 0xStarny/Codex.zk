@@ -1,0 +1,207 @@
+---
+act: 4
+number: 16
+slug: "the-honest-vote"
+title: "The Honest Vote"
+tagline: "DAO governance without whale intimidation, retaliation, or strategic coordination — and verifiable to the last ballot."
+estimatedMinutes: 8
+prerequisites: ["the-self-sovereign-id"]
+codexCard:
+  concept: "Private + verifiable voting"
+  oneLine: "ZK proofs let voters cast ballots privately while a public tally remains cryptographically auditable — solving the centuries-old governance dilemma."
+  why: "It changes the dynamic of every on-chain governance vote, and points toward a more general civic-tech use case."
+---
+
+## Hook
+
+*Noiro is in front of a town hall. Brick. Steps. People going in and out, holding clipboards. He waits for one of them to pass before speaking.*
+
+"DAOs were a beautiful idea, kid. *Decentralized autonomous organization*. Members vote on every decision. Money moves transparently. Power flows from the bottom up. The whitepaper version is genuinely inspiring."
+
+*He scratches his cheek.*
+
+"The lived version? Most DAO votes turn into theater. A handful of large holders signal their position publicly. Everyone else either falls in line or doesn't bother. Active participation is rare. Genuinely contested votes are rarer. And whenever there *is* a contested vote, the public ballot becomes a tool of intimidation — for whales, for protocol teams, for ideological factions."
+
+*He shakes his head once.*
+
+"Public voting is broken. We knew it was broken in the 1800s. Every working democracy in the world figured out a long time ago that ballots have to be secret. We rebuilt voting on-chain and forgot the lesson."
+
+*He gestures to the building.*
+
+"Today's case: how Aztec lets us *not* forget."
+
+---
+
+## Beat 1 — Why On-Chain Voting Is Public Today
+
+Most DAO governance protocols on Ethereum work like this:
+
+A proposal is posted. Token holders cast votes by submitting transactions that record their position (yes/no/abstain) along with their voting weight. The chain tallies the votes by summing weighted balances. Anyone can audit.
+
+The auditability is genuinely valuable. You can verify, mathematically, that the announced result matches the on-chain tally.
+
+The cost: every vote is **public**. Specifically:
+
+- **Which addresses voted which way.**
+- **How much voting weight each address used.**
+- **The exact timing of each vote.**
+- **The cumulative tally as it evolves over the voting window.**
+
+This sounds neutral. It is not.
+
+Public voting under conditions of inequality is a known-bad pattern. It creates pressure to conform. It enables retaliation — by employers, by partners, by political opponents. It enables strategic coordination — whales watching the running tally and timing their votes to overwhelm contested margins. It chills dissent and enables the most powerful holders to dominate by visibility alone.
+
+Every working democracy in the world figured this out by the early 20th century and adopted secret ballots. On-chain governance, building from scratch, accidentally rebuilt the pre-secret-ballot system.
+
+[INTERACTIVE: reveal] Three historical examples: viva-voce voting in pre-1872 UK elections, employer-supervised voting in early US labor disputes, public voting in the early Soviet Union. Each card explains: how it was used to suppress dissent, when secret ballots were introduced, what the empirical effect was.
+
+---
+
+## Beat 2 — What's Actually Wanted: Private Vote, Public Tally
+
+The thing democracies converged on, after about a century of empirical work, is the **secret ballot with public tally**.
+
+- Each individual ballot is private.
+- The aggregate tally is public.
+- The mechanism enforces "one person, one vote" (or "one token, one weighted vote" in the on-chain analog) without exposing how any individual voted.
+
+This is exactly the shape of a ZK proof, applied to voting.
+
+A ZK voting protocol on Aztec works, in essence, like this:
+
+1. **Eligibility verification.** Each voter generates a ZK proof that they hold the required voting tokens (or eligibility credential), without revealing which tokens or how many. The protocol enforces that each eligible voter votes at most once via nullifiers.
+
+2. **Private ballot casting.** The voter encodes their position (yes/no/abstain) plus their weight in a private vote-commitment. The commitment is posted to the chain alongside a proof that it's valid.
+
+3. **Tallying.** As votes are cast, the chain maintains a running tally — which can be public (visible as it evolves) or hidden (revealed only after the voting window closes, with a corresponding ZK proof of correctness).
+
+4. **Public audit.** Anyone can verify, after the fact, that:
+   - Every vote came from an eligible voter (each nullifier is unique).
+   - The final tally is consistent with the cast votes (a final ZK proof attests to the sum).
+   - No vote was double-counted, removed, or fabricated.
+
+What stays private: which voter cast which vote.
+What stays public: the final result, and the cryptographic proof that it's correct.
+
+[INTERACTIVE: animation] A visual of a voting flow on Aztec. Voters drop ballots into a sealed transparent box. The box accumulates the cumulative tally arithmetic, but individual ballot contents are hidden. After the window closes, the box opens to reveal: the final tally, plus a tag that says "verified by 1,247 cryptographic proofs, no duplicates, no fakes." The user can hover any voter on the screen to see what's revealed about them: nothing.
+
+---
+
+## Beat 3 — What Changes When Voting Goes Private
+
+Concrete changes you'd expect (and that early experiments are starting to confirm):
+
+**Whale intimidation collapses.** A small holder can vote against a whale-supported proposal without fearing retaliation. The whale doesn't know which addresses voted against them.
+
+**Strategic coordination is harder.** Coordinated voting blocs can't observe their own bloc voting in real time, so the social pressure to conform within a bloc diminishes.
+
+**Last-minute manipulation is constrained.** With a public running tally, large holders historically time their votes to overwhelm contested margins. With a hidden running tally (revealed only at close), this strategic timing has nothing to act on.
+
+**Genuine deliberation increases.** When voting is private, the public discourse around a proposal can be more honest. Members can express views in chat without those views being immediately weaponized into "you'll vote against me, will you?" dynamics.
+
+**Quiet dissent becomes visible in the result.** Proposals that look universally supported in public — because nobody wants to be the loud dissenter — sometimes lose under secret ballot, revealing genuine community concerns that public voting was suppressing.
+
+These aren't speculative. They are the well-documented effects of secret ballots in every political and corporate setting where they've been studied. Applying the same primitive to on-chain governance produces the same effects, with the added benefit of cryptographic auditability that paper-based secret ballots couldn't offer.
+
+[INTERACTIVE: side-by-side]
+**Public vs private DAO voting:**
+| Property | Public on-chain voting | ZK private voting |
+|---|---|---|
+| Final tally auditable | Yes | Yes |
+| Individual votes auditable | **Yes (problematic)** | No |
+| Whale intimidation possible | Yes | No |
+| Strategic coordination possible | Easy | Hard |
+| Retaliation possible | Yes | No |
+| Quiet dissent visible | No (suppressed) | Yes (in the tally) |
+
+---
+
+## Beat 4 — Beyond Yes/No: Programmable Voting
+
+Aztec's hybrid state model means voting can do much more than secret yes/no.
+
+**Quadratic voting.** Voters spend a budget of voting credits, with the cost of N votes for one option being N². The tally is public; each individual's allocation is private. This is a known-good mechanism for surfacing intensity of preference, hard to deploy publicly because it's gameable when the allocations are visible.
+
+**Conviction voting.** Votes accumulate weight over time, the longer they're held. The voter's specific allocation is private; the per-proposal accumulation is public. Lets users signal long-term preferences without exposing their portfolio strategy.
+
+**Ranked-choice voting.** Each voter privately orders the candidates. The tally aggregates preferences via a ZK-proven instant-runoff calculation. Standard in some real-world elections; previously hard to do trustlessly on-chain because the intermediate computation is sensitive to manipulation. ZK proofs solve this.
+
+**Eligibility-conditional voting.** Voters from specific subsets (token holders + holding period > X, contributors with > Y commits to the protocol's repo, attestation-bearers from approved auditors) participate as separate weighted blocs. Each eligibility check is a ZK proof; voters' individual eligibilities and votes are both private.
+
+**Proposal-specific privacy windows.** Some proposals are voted with running public tallies (encouraging coalition-building), others with hidden tallies until close (encouraging genuine independent decision-making). The protocol picks per proposal.
+
+[INTERACTIVE: simulator] The user designs a vote: pick voting mechanism (yes/no, quadratic, ranked-choice), pick eligibility (token holding, attestation, hybrid), pick tally visibility (public running, hidden until close). The simulator generates a mock proposal page and shows what each role (voter, observer, contestant) sees at each phase.
+
+---
+
+## Beat 5 — Beyond DAOs: The Civic-Tech Question
+
+The on-chain voting space has been mostly DAO-focused. The same primitives — verifiable, private, sybil-resistant voting — have potential applications well beyond DAOs:
+
+- **Internal corporate governance** for organizations that want auditable secret ballots without paper.
+- **Cooperative and union governance** where members historically resort to either non-auditable paper or non-private digital tools.
+- **University faculty and student governance**, traditionally secret-ballot but increasingly digital, with no good auditable-secret-ballot tool.
+- **Civic participation systems** — participatory budgeting, neighborhood referenda, advisory polls — where digital infrastructure has lagged because none of the existing tools combine privacy and auditability.
+- **Government elections, eventually.** The technical primitives are present today. The institutional, regulatory, and cultural adoption is decades-long. But the building blocks are no longer the bottleneck.
+
+This is a long-tail use case. Most of it isn't in production today. What matters is that **the cryptographic primitive is available**. Applications follow availability — sometimes slowly, but reliably. Aztec doesn't need to solve government voting; it just needs to be a credible, mature platform on which civic-tech builders can iterate.
+
+---
+
+## Reveal
+
+Private voting is one of the cleanest applications of Aztec's design:
+
+- **Each ballot is private.** Voters can dissent without retaliation.
+- **The tally is public and auditable.** Cryptographic proofs guarantee no fakes, no double-votes, no removed votes.
+- **The mechanism is composable.** Quadratic, ranked-choice, conviction, and eligibility-gated variants are all expressible.
+- **The use cases extend well beyond DAOs** into the broader civic-tech space, on a slower adoption curve.
+
+This is a structural fix to a known-broken pattern — one we already solved in physical-world institutions a century ago, then accidentally re-broke when we moved governance on-chain. ZK voting is just **bringing the secret ballot to the digital age, with mathematical assurance for the audit.**
+
+The next investigation tackles the inverse pattern: not voters trying to keep secrets from each other, but **users trying to comply with regulators while keeping data secret from everyone else**. The compliance-without-surveillance problem.
+
+## Codex Card
+
+> **Private + verifiable voting**
+> ZK proofs let voters cast ballots privately while a public tally remains cryptographically auditable — solving the centuries-old governance dilemma.
+> *Why it matters: it changes the dynamic of every on-chain governance vote, and points toward a more general civic-tech use case.*
+
+## Code (optional)
+
+```rust
+// A simplified ZK voting circuit. Each voter proves:
+//   - They hold an eligible token (without revealing which).
+//   - They've not voted before (via a unique nullifier).
+//   - Their ballot encodes a valid choice.
+// The chain accumulates the encrypted tally, which is revealed at the end.
+
+contract PrivateVote {
+    private eligibility_tree: MerkleRoot;        // commitments of all eligible voters
+    public proposal_id: Field;
+    public yes_votes: EncryptedField;
+    public no_votes: EncryptedField;
+    public used_nullifiers: NullifierSet;
+
+    private fn cast_vote(
+        voter_secret: Field,                     // private
+        merkle_path: [Field; 16],                // private
+        choice: Field,                           // private (0 = no, 1 = yes)
+    ) {
+        // 1. Verify eligibility
+        let voter_commitment = pedersen_hash([voter_secret, proposal_id]);
+        assert_merkle_path(voter_commitment, merkle_path, eligibility_tree);
+
+        // 2. One-shot enforcement
+        let nullifier = pedersen_hash([voter_secret, proposal_id, "VOTE"]);
+        assert(!used_nullifiers.contains(nullifier));
+        used_nullifiers.insert(nullifier);
+
+        // 3. Add to tally (homomorphically)
+        if choice == 1 { yes_votes = yes_votes.add_one(); }
+        else            { no_votes  = no_votes.add_one(); }
+    }
+}
+```
+
+*Annotation: The voter's identity, choice, and exact path through the eligibility tree all stay private. The chain learns: a unique nullifier was used (so this voter has now voted) and the public tally moved by one. After the voting period, the encrypted tallies are decrypted by the protocol (or proven to equal the announced totals via a final ZK proof). What you have at the end: a verifiable result, with no individual ballot revealed.*

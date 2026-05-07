@@ -1,0 +1,185 @@
+---
+act: 4
+number: 17
+slug: "compliance-without-surveillance"
+title: "Compliance, Without Surveillance"
+tagline: "Prove you're not on a sanctions list, that your funds are clean, that your trade meets a threshold — without exposing anything else."
+estimatedMinutes: 8
+prerequisites: ["the-honest-vote"]
+codexCard:
+  concept: "Selective disclosure for compliance"
+  oneLine: "ZK proofs let users (and institutions) satisfy regulatory checks by proving compliance properties — not by handing over their data."
+  why: "It's the technical answer to the political tension we set up in Investigation 4 (the compliance trap)."
+---
+
+## Hook
+
+*Noiro is in a bank lobby. Marble floor, glass partitions, a long line of people waiting at counters. He sits in a wing chair near the window.*
+
+"Investigation 4. Beginning of Act I. We talked about the compliance trap — the lazy framing that says privacy and compliance can't coexist."
+
+*He gestures around.*
+
+"Today's case is the technical answer to that. We've built up enough machinery now — ZK proofs, Aztec's hybrid state, identity primitives, voting — to actually show what *compliance without surveillance* looks like in practice."
+
+*He opens a folder.*
+
+"It's not a hypothesis anymore. There are working systems. Real institutions are adopting some version of this. The conversation in the trade press has shifted in the last 18 months from 'is this possible' to 'who's deploying it first.' Today's case maps the territory."
+
+---
+
+## Beat 1 — What Compliance Actually Asks For
+
+We covered this briefly in Investigation 4. Worth re-grounding.
+
+When a financial institution or regulator says "we need compliance," they typically mean one or more of:
+
+- **Sanctions screening:** the counterparty isn't on a published sanctions list (OFAC, EU, UN).
+- **Source-of-funds attestation:** funds didn't come from a known illicit address (ransomware, sanctioned mixer outflow, etc.).
+- **Identity verification:** for above-threshold transactions, the user has passed a KYC check.
+- **Suspicious-activity reporting:** transactions matching certain patterns are flagged for additional review.
+- **Audit trail:** under appropriate legal authority, records can be produced.
+- **Threshold reporting:** transactions over X are tracked for tax / AML purposes.
+
+This is a real list. It's not bigger than this. The intuition that "compliance requires total transparency" comes from a 20th-century operational model — where the only way to verify any of the above was to hand the institution all the underlying data.
+
+That model is technologically obsolete now. The ZK toolkit lets us decompose each of those compliance asks into a specific verifiable property — and prove only that property.
+
+[INTERACTIVE: reveal] The compliance asks above, each as a card. Clicking each reveals: (a) the data currently disclosed to satisfy it, (b) the property that's actually being checked, (c) how a ZK proof reduces disclosure to just (b).
+
+---
+
+## Beat 2 — Five Concrete Compliance Patterns On Aztec
+
+A handful of patterns now repeat across real-world implementations:
+
+**Pattern 1: Sanctions clearance proofs.**
+The user proves "my counterparty's address is not in the published OFAC sanctions list" using a ZK proof against a public Merkle root of the sanctions list. The verifier learns: yes, clean. The verifier does not learn: which counterparty, which transaction.
+
+**Pattern 2: Provenance proofs ("clean coin" proofs).**
+The user proves "the funds I'm spending here trace back, through the on-chain history, to a non-illicit source — meaning none of the ancestors of this UTXO/note are in a known illicit cluster." This is harder than sanctions screening (the proof has to walk the funds-flow graph), but it's been demonstrated as feasible.
+
+**Pattern 3: KYC attestation proofs.**
+The user, having previously KYC'd with a regulated provider, holds a signed attestation. Each on-chain interaction produces a fresh ZK proof that "I hold a valid KYC attestation issued by an approved provider, dated within the last X months." The provider isn't called per-transaction; the user re-uses the credential locally.
+
+**Pattern 4: Threshold disclosure / view-key models.**
+The protocol or institution issues users a regular view-key that auditors / regulators can decrypt under specific conditions (court order, periodic audit). Users get full privacy from the public; designated auditors retain access under controlled terms. This is a *trust-distributing* compromise — useful in regulated institutional contexts where pure user-controlled privacy isn't acceptable to the regulator.
+
+**Pattern 5: Aggregate compliance proofs.**
+A protocol produces a periodic ZK proof that "no transaction in the last 30 days exceeded the regulatory threshold without an associated KYC attestation, and 0% of counterparties were on the sanctions list." Regulators get the assurance they need; user-level data never enters the report.
+
+[INTERACTIVE: simulator] The user picks a regulatory regime (US OFAC, EU AMLD6, UK FCA), then picks an institutional role (compliance officer, retail user, auditor). The simulator shows what each role can verify under each pattern and what stays private.
+
+---
+
+## Beat 3 — The Auditor Key, Done Right
+
+A specific point worth a beat: the **auditor key** as a primitive.
+
+Aztec's account abstraction makes it natural for individuals or institutions to grant a designated auditor — an internal compliance officer, an external auditor, a regulator — limited visibility into their on-chain activity, while keeping the chain itself private.
+
+The shape:
+
+1. The user (or institution) generates an "auditor key pair" alongside their normal account.
+2. Each private transaction is encrypted, in addition to the recipient's key, **also** to the auditor's public key.
+3. The auditor can decrypt any transaction associated with this account, but not transactions of any other account.
+4. The auditor key can be rotated, revoked, scoped to specific time ranges or transaction types.
+
+Concretely, this means:
+
+- **A regulated exchange's institutional client** can have full transactional privacy from the public *and* full transactional visibility to the regulator-designated auditor — without leaking their data to the rest of the chain.
+- **A multinational corporation** can run on-chain operations with its internal compliance team having necessary access, while competitors and stalkers see nothing.
+- **A bank's institutional desk** can use Aztec privacy infrastructure with the bank's internal AML team retaining decryption rights.
+- **A regulator** can require that institutions operating under their jurisdiction expose an auditor key — with the regulator able to investigate specific accounts under specific authorization, without preemptive surveillance of every user.
+
+The key property is **structural**. The privacy is not eroded for the public. The auditing is constrained to the specific party with the key, under the specific authorization framework that party operates under.
+
+This is *not* a backdoor. There is no secret access by anyone other than the explicitly-designated auditor. The user knows who has visibility. Revocation is possible. The auditor cannot see beyond what the key grants. It's a controlled, transparent, accountable disclosure relationship — exactly the shape that's worked for centuries in non-blockchain finance.
+
+[INTERACTIVE: animation] An institutional account holder. Their transactions are visualized as encrypted envelopes. Three viewers: the public chain (sees opaque envelopes), the regulator-designated auditor (sees the decrypted contents for this specific account), and a random outside observer (sees nothing). The animation makes clear: privacy from the public, accountability to the appropriate authority, no third-party surveillance leakage.
+
+---
+
+## Beat 4 — Honest Tensions Worth Acknowledging
+
+Compliance-without-surveillance isn't a "no tradeoffs" architecture. The honest tensions:
+
+**Who decides who's an auditor?** Auditor-key models work cleanly when the relationship is well-defined (a corporation's internal compliance team, a regulated bank's reporting officer). They get murkier when the question is "should a chain include an auditor key for the chain's home jurisdiction?" — and even murkier when it's "for jurisdictions the chain operates in but isn't headquartered in."
+
+Most real-world Aztec deployments treat this as **application-level**, not chain-level — meaning, individual applications and institutions choose their auditor model, but the chain itself doesn't impose one. This preserves the chain's neutrality while letting compliant applications opt in. It also means a non-compliant application can choose not to.
+
+**Sanctions list maintenance.** Privacy-preserving sanctions screening requires the screening list be kept up to date. The list is typically published by governments. Mechanisms exist to update on-chain Merkle roots of sanctions lists, but they introduce a (small) trust dependency on whoever publishes the list.
+
+**False positives.** Any compliance system, on-chain or off-chain, has false positives. The privacy-preserving versions are no exception. A user whose funds happen to be a few hops downstream from a known illicit address may fail a clean-coin proof for reasons beyond their control. Real-world deployments need **dispute and remediation flows** — which is true on transparent chains too, but harder to design when the underlying data is private.
+
+**Regulatory acceptance.** Some regulators have been openly supportive of ZK-based selective disclosure (some EU bodies, parts of the UK FCA, Singapore's MAS). Others have been skeptical or actively hostile. The political acceptance curve is much slower than the technical readiness. This is a multi-year process, not a one-year one.
+
+[INTERACTIVE: reveal] Five tensions, each as a card. Each card has a "current best practice" line and a "still being worked on" line — making clear that this is real engineering, not solved-and-done.
+
+---
+
+## Beat 5 — What's Actually Happening In The Field
+
+A snapshot of where the conversation is, as of writing:
+
+- **Several major financial institutions** have publicly explored privacy-preserving compliance frameworks — including pilot deployments using ZK-based KYC re-use, sanctions-clean settlement, and confidential institutional payments. The names include traditional banks, settlement networks, and specialized DeFi institutions. Deployment cycles are slow but trending in one direction.
+
+- **Regulators in some jurisdictions** have begun to engage substantively with the technical primitives. The 2023 statement by the Basel Committee on Banking Supervision about "privacy-enhancing technologies in banking" was a notable reference point; subsequent work by the Bank for International Settlements has been more concrete.
+
+- **The privacy-preserving standards space** (W3C, ISO, IETF) has been maturing. ZK-friendly versions of credentials (BBS+ signatures, anonymous credentials) are heading toward formal standardization.
+
+- **Specific Aztec applications** have shipped or are shipping for regulated use cases: institutional payments, compliant DeFi gateways, tokenized real-world assets with privacy-preserving holders. The space is small but real.
+
+- **Broader chains beyond Aztec** are adopting some elements of this approach. Even non-privacy-first chains are looking at "shielded pools with regulator-friendly disclosure" as an upgrade pattern.
+
+The trajectory is unambiguous: **the choice is no longer "transparent chain or fully-private chain."** It is "what selective-disclosure model fits this use case best." Aztec is a leading platform for the answer; others are following.
+
+[INTERACTIVE: reveal] A timeline (2020–today) of major regulatory and industry milestones in privacy-preserving compliance. Each entry is a card with the announcement, the relevant body, and the technical primitive involved.
+
+---
+
+## Reveal
+
+Compliance without surveillance is the **technical resolution** of the political tension we set up in Investigation 4:
+
+- Regulators get what they actually need: verifiable properties (sanctions clean, KYC'd, threshold-respected, audit-trailable under authorization).
+- Users get what they actually need: privacy from the public, control over their data, the right to revoke disclosure when relationships change.
+- Institutions get what they actually need: legal-grade compliance posture, internal audit access, and the ability to operate in regulated jurisdictions without exposing their clients' data publicly.
+
+The mechanisms are real, deployable, and being adopted. They're not a future technology in the way "fully homomorphic encryption for general computation" still is. ZK-based selective disclosure is a **shippable primitive** — and shipping it is the major work happening in privacy-preserving on-chain infrastructure right now.
+
+We've now covered four application categories — DeFi, identity, voting, compliance. The fifth and last in this Act is more playful: the category of **applications that fundamentally require hidden information**. Games, auctions, secret-bid mechanisms. Things that previously couldn't exist on-chain at all.
+
+That's the next case.
+
+## Codex Card
+
+> **Selective disclosure for compliance**
+> ZK proofs let users (and institutions) satisfy regulatory checks by proving compliance properties — not by handing over their data.
+> *Why it matters: it's the technical answer to the political tension we set up in Investigation 4.*
+
+## Code (optional)
+
+```rust
+// A clean-coin proof: prove that none of the ancestors of my note
+// (going back up to depth N) are in a known illicit Merkle tree.
+
+contract CleanCoinProof {
+    public sanction_root: Field;             // Merkle root of sanctioned addresses
+    public proof_depth: Field;               // ancestor depth (e.g. 8)
+
+    private fn prove_clean(
+        my_note: Field,
+        ancestor_chain: [Field; 8],          // the chain of preceding notes
+        non_membership_proofs: [Proof; 8],   // proof each ancestor isn't in sanction_root
+    ) {
+        // Verify each ancestor in the chain
+        for i in 0..proof_depth {
+            verify_chain_link(my_note, ancestor_chain[i], i);
+            verify_non_membership(ancestor_chain[i], sanction_root, non_membership_proofs[i]);
+        }
+    }
+}
+```
+
+*Annotation: The proof attests "for each of my note's last 8 ancestor transactions, I have a proof that the ancestor is NOT in the sanctions Merkle tree." The verifier learns only "yes, clean." The verifier does not learn the chain of ancestors, the user's identity, or any specific transaction details. The user has done the audit — privately — and can present the result to anyone who needs to verify it.*

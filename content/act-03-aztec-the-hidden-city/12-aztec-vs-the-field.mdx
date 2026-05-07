@@ -1,0 +1,193 @@
+---
+act: 3
+number: 12
+slug: "aztec-vs-the-field"
+title: "Aztec vs. The Field"
+tagline: "There are several ZK chains now. Aztec made one specific set of bets. Here's how they line up."
+estimatedMinutes: 9
+prerequisites: ["public-private-hybrid", "noir-the-universal-language", "native-account-abstraction"]
+codexCard:
+  concept: "Where Aztec sits in the ZK landscape"
+  oneLine: "Most ZK chains optimize for scalability or full transparency-with-proofs; Aztec is the major one optimizing for hybrid privacy plus native AA."
+  why: "It clarifies what Aztec uniquely enables — and what it doesn't try to be."
+---
+
+## Hook
+
+*Noiro is in a cartographer's chamber. Maps spread across a stone table — each map showing a different city. Each city has a name on a wooden tag. The tags read: **AZTEC**, **STARKNET**, **ZKSYNC**, **POLYGON ZKEVM**, **MINA**, **ALEO**, **SCROLL**, **LINEA**.*
+
+"There's been an explosion of ZK-based chains in the last few years, kid. They share some primitives. They aim at very different things. Today's case is about reading the map honestly — what each one is for, where Aztec fits, and which problems Aztec is the only one tackling."
+
+*He picks up the AZTEC tag, places it in the center.*
+
+"This isn't about declaring a winner. Each project's making a real bet. The right question is: *for the use cases I care about, which set of bets adds up?*"
+
+---
+
+## Beat 1 — The Two Major Schools Of ZK Chain
+
+Today's ZK chain landscape splits, broadly, into two design philosophies.
+
+**School 1: ZK Rollups for scalability.**
+The chain is structurally similar to Ethereum (transparent, public state, EVM-compatible execution). Zero-knowledge proofs are used to compress thousands of transactions into a single proof posted to L1. The use case is *throughput and cost*, not privacy. Privacy is either absent or bolted on.
+
+Examples: **zkSync Era**, **Polygon zkEVM**, **Scroll**, **Linea**, **StarkNet** (in its primary configuration). These are general-purpose smart contract chains where the ZK part lives in the prover, not in the application logic. From a developer's perspective, you write Solidity (or Cairo, in StarkNet's case), and your contract is public.
+
+**School 2: ZK Chains for privacy.**
+The chain treats privacy as the primary design constraint. State is encrypted, transactions are shielded, proofs gate every state change. The use case is *confidentiality*, not just throughput.
+
+Examples: **Aztec**, **Aleo**, **Mina** (in some configurations), **shielded Zcash on its own**.
+
+Aztec sits in School 2 — but with the hybrid-state twist that makes it different from a fully-private-only chain like Aleo. It also acts as a Layer 2 on Ethereum, giving it some of School 1's properties (settlement security from Ethereum, an L1-secured finality model).
+
+[INTERACTIVE: reveal] A 2x2 grid: x-axis = "primarily for privacy" vs "primarily for scaling," y-axis = "execution model: public-only" vs "supports private state." Each chain plotted as a dot. Aztec sits in the upper-left (privacy-first, supports private state). The user can click each dot to read what that chain optimizes for.
+
+---
+
+## Beat 2 — Aztec vs. The Other Major ZK L2s
+
+Let's compare Aztec specifically to the headline-grabbing ZK L2s.
+
+**zkSync Era** — A general-purpose zk-rollup. Transactions are EVM-compatible (Solidity contracts, MetaMask compatibility). Privacy is **not part of the design**: every transaction's data is visible on-chain just like Ethereum, the ZK proofs are about scalability, not confidentiality. zkSync is great for users who want cheaper Ethereum-like UX. It does not provide any meaningful privacy primitive.
+
+**Polygon zkEVM** — Same shape as zkSync. EVM-compatible, optimized for cheap throughput, transactions are public. Privacy is a separate concern outside the chain's design.
+
+**Scroll** — Bytecode-level EVM compatibility, focus on developer compatibility with existing Ethereum tooling. Transactions are public. Privacy not in scope.
+
+**Linea** (ConsenSys) — Same shape. Public, EVM-compatible, scalability-oriented.
+
+**StarkNet** — Cairo-based, more powerful than EVM in some ways, broadly oriented to throughput and complex on-chain compute. StarkNet's primary mode is public execution. There's been work on privacy add-ons (Naming Service privacy proofs, etc.) but it's not the chain's primary thrust.
+
+[INTERACTIVE: side-by-side]
+**ZK rollups by privacy primitive:**
+| Chain | Public state | Private state | Privacy-first? |
+|---|---|---|---|
+| **Aztec** | Yes | **Yes (native, hybrid)** | **Yes** |
+| zkSync | Yes | No (bolt-ons only) | No |
+| Polygon zkEVM | Yes | No (bolt-ons only) | No |
+| Scroll | Yes | No (bolt-ons only) | No |
+| Linea | Yes | No (bolt-ons only) | No |
+| StarkNet | Yes | Limited | Partially |
+
+The honest summary: **of the major Ethereum-aligned ZK rollups, Aztec is the only one for which privacy is the primary design goal.** The others use the same family of cryptography — but for a different mission.
+
+This isn't a criticism. zkSync and friends are **legitimately optimizing for a different problem**: making Ethereum cheaper at scale. That's valuable. It's just not the same problem Aztec is solving.
+
+---
+
+## Beat 3 — Aztec vs. The Privacy-First Chains
+
+Now compare Aztec to its peers in School 2 — the chains that prioritize privacy.
+
+**Aleo** — Aleo's chain is fully private by default. State is encrypted, programs are written in Leo (Aleo's own language). Aleo's bet: maximalist privacy, with optional public functionality. Aleo is in some ways the closest peer to Aztec, though their architectures differ — Aleo is an L1 (its own chain), while Aztec is an L2 on Ethereum.
+
+**Mina** — Mina's primary innovation is constant-size blockchain state via recursive ZK. It supports privacy in some configurations but is more known for the succinctness story than the privacy one. Smart contract support is more limited than Aztec's.
+
+**Zcash** — Zcash is a payments-focused chain, not a smart contract platform. Excellent at private transfers; not a target for general programmable privacy.
+
+**Monero** — Same as Zcash for our purposes: payment-focused, not a programmable smart contract platform.
+
+[INTERACTIVE: side-by-side]
+**Privacy-first chains by capability:**
+| Chain | Smart contracts | Hybrid state | L1 settlement on Ethereum | Native AA |
+|---|---|---|---|---|
+| **Aztec** | **Yes (Noir)** | **Yes** | **Yes (L2 on Ethereum)** | **Yes** |
+| Aleo | Yes (Leo) | Limited | No (own L1) | Limited |
+| Mina | Yes (zkApps) | Limited | No (own L1) | Limited |
+| Zcash | No (payments only) | No | No | N/A |
+| Monero | No (payments only) | No | No | N/A |
+
+The honest summary: **Aztec uniquely combines hybrid state, programmable smart contracts, Ethereum settlement, and native account abstraction.** Each of those features exists somewhere else. The bundle is what's distinctive.
+
+---
+
+## Beat 4 — Tradeoffs Aztec Accepts
+
+Every architecture has costs. Aztec's choices have specific ones — worth being honest about.
+
+**Aztec is not directly EVM-compatible.** Solidity contracts don't run on Aztec out of the box. There's no "deploy your existing Ethereum dApp to Aztec by changing one config." The contract authoring experience is in Noir, not Solidity. For teams with deep Solidity codebases, this is real friction.
+
+This is a deliberate tradeoff: building a privacy-native execution environment in a way that *is* compatible with EVM semantics turns out to be very hard, and the team chose not to compromise the privacy model to chase EVM compatibility. The cost is a smaller initial dev pool. The benefit is a clean architecture.
+
+**Performance numbers are still maturing.** Aztec is engineering-heavy — provers, sequencers, browser-side proving systems. As of the time of writing, the chain is in active testnet/mainnet evolution, with performance improving substantially each release but not yet at the levels of more mature L2s on raw throughput. That trajectory is good but not yet finished.
+
+**The ecosystem is young.** Aztec mainnet shipped relatively recently. The pool of dApps, tooling, indexers, oracles, and integrations is still small compared to Ethereum L1 or the older zkEVM rollups. Early adopters get to shape the ecosystem; latecomers will benefit from a more mature one.
+
+**The complexity ceiling for application designers is higher.** Writing privacy-correct contracts is harder than writing public ones. Designers have to think about what should be private, what should be public, what kinds of leaks are acceptable, how guardians and recovery work. The chain gives you the tools; using them well takes deliberate design.
+
+[INTERACTIVE: reveal] A short list of "things that are easier on Aztec" and "things that are easier elsewhere," each with one paragraph of honest accounting. The point isn't to pick a winner — it's to make the tradeoffs explicit.
+
+---
+
+## Beat 5 — Where The Chain Adds Up
+
+The honest sales pitch for Aztec, derived from the architectural choices we've now mapped:
+
+> *If your application requires the user (or institution, or DAO) to have **confidential state on a chain**, while still composing with **public liquidity / public oracles / public auditability** — and you want users to have **programmable, recoverable accounts** that don't depend on a fragile seed phrase — Aztec is currently the most direct fit in the ecosystem.*
+
+That sentence, expanded, is a list of use cases:
+
+- **Private DeFi** that still uses public liquidity sources.
+- **Identity primitives** (proof-of-personhood, KYC-once-prove-anywhere) that need both the privacy primitive and the smart contract platform.
+- **Compliance-aware private finance** for institutions — selective disclosure, auditor keys, threshold visibility.
+- **Programmable wallets** with sophisticated recovery and policy that don't leak the user's setup.
+- **Hidden-information games** (poker, sealed-bid auctions, fog-of-war strategy) that need public lobby state and private game state in the same contract.
+- **Private payments with composability** — confidential transfers that interact with public stablecoin issuance, public oracles, public protocol fees.
+
+The next investigation in this Act will dig into one of these in detail — the anatomy of a private transaction — to make the abstract concrete. The full breadth of applications gets its own act (Act IV).
+
+---
+
+## Reveal
+
+The ZK chain landscape, simplified:
+
+- **Most ZK rollups optimize for scalability**, with public state. They're cheap Ethereum.
+- **A smaller group of chains optimize for privacy**, with private state. They include Aztec, Aleo, Mina, plus the payment-focused Zcash and Monero.
+- **Aztec is distinctive within School 2** because of the hybrid state model, the Noir language's portability, native account abstraction, and Ethereum L1 settlement — all bundled together.
+- **No chain dominates every dimension.** The right chain depends on what the application needs. Aztec's combination is uniquely suited for privacy-with-composability use cases.
+
+We've now mapped Aztec's three big bets (hybrid state, Noir, native AA) and placed the chain in its competitive context. One more case in this Act, then we leave the temple. The remaining case is the most concrete: **what actually happens, step by step, when you make one private transaction on Aztec?**
+
+That's where the abstraction becomes a system you can hold in your head.
+
+## Codex Card
+
+> **Where Aztec sits in the ZK landscape**
+> Most ZK chains optimize for scalability or full transparency-with-proofs; Aztec is the major one optimizing for hybrid privacy plus native AA.
+> *Why it matters: it clarifies what Aztec uniquely enables — and what it doesn't try to be.*
+
+## Code (optional)
+
+```rust
+// A side-by-side mental model: roughly the same private-transfer-with-public-supply-tracker,
+// implemented in three architectures.
+
+// Ethereum + Tornado-style mixer (separate contracts, separate UX, no composability):
+//
+//   - User makes a public transfer to mixer
+//   - Later, user withdraws to a fresh address from mixer
+//   - Public supply, public mixer activity, both visible
+
+// Aleo (full-private chain):
+//
+//   - User makes a private transfer
+//   - Total supply requires a separate, manually-tracked public record
+
+// Aztec (hybrid):
+//
+contract HybridToken {
+    public total_supply: Field;        // visible to all
+    private balances: PrivateMap<Address, Field>;  // private to owner
+
+    private fn transfer(to: Address, amount: Field) {
+        let from_bal = balances.get(context.msg_sender);
+        assert(from_bal >= amount);
+        balances.set(context.msg_sender, from_bal - amount);
+        balances.set(to, balances.get(to) + amount);
+        // total_supply unchanged — private transfer, public total preserved
+    }
+}
+```
+
+*Annotation: The Aztec version compresses what would be "two contracts and a bridge" elsewhere into a single contract with mixed state. That collapse is what hybrid-by-default buys you. It's also why "compare to other chains" is harder than it looks — the comparison isn't just feature-by-feature, it's about what becomes architecturally easy.*

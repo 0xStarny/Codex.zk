@@ -1,0 +1,196 @@
+---
+act: 4
+number: 14
+slug: "private-defi"
+title: "Private DeFi"
+tagline: "Lend, trade, and earn yield without broadcasting your portfolio to every bot in the mempool."
+estimatedMinutes: 8
+prerequisites: ["inside-an-aztec-tx"]
+codexCard:
+  concept: "Private DeFi"
+  oneLine: "Aztec lets users participate in DeFi protocols with private balances, private trades, and private positions — while public liquidity and aggregate metrics remain visible."
+  why: "It's the most direct, immediate use case where transparent chains have a clear-cut economic harm and Aztec offers a clear-cut fix."
+---
+
+## Hook
+
+*The temple is gone. Noiro is on a downtown sidewalk. Tall buildings. Coffee shops. A bank on one corner, a brokerage on another. The light is morning, clean, modern. He's ditched the trench coat for a lighter jacket but the fedora stays.*
+
+"Welcome to Act IV, kid. The applications."
+
+*He walks. The reader follows.*
+
+"For four cases now you've been learning what the chain *can* do. This Act is about what people *will* do with it. We'll keep the cases short and concrete. Five categories. We start with the one where the transparent-chain status quo is most obviously broken: finance."
+
+*He nods at the bank.*
+
+"DeFi was supposed to be open finance. Open finance turned out to mean: every position, every loan, every trade — broadcast to the world. That's not how finance works in the real world for a reason. Today we look at why a privacy-aware version is overdue."
+
+---
+
+## Beat 1 — What "Public DeFi" Actually Looks Like
+
+When you use a DeFi protocol on Ethereum — Aave, Uniswap, Compound, Curve, you name it — every action you take is on the public ledger. That includes:
+
+- **Your address.** Linked, often, to your other addresses, your ENS name, your trading history, your social profiles.
+- **Your positions.** Total deposits in lending pools. Open trades on perps. LP positions with their precise composition. NFT loans. Concentrated liquidity ranges.
+- **Your transaction history.** Every entry. Every exit. Every rebalance. Every claim. Every withdrawal.
+
+Specialist firms build dashboards on top of this data. There are entire SaaS products that let anyone, for a small fee, watch a wallet in real time and get notifications when it makes moves. "Whale-watching" is a recreational activity for crypto Twitter. "Wallet stalking" is, more disturbingly, a competitive practice — funds stalk each other, traders stalk specific high-performing wallets, retail tries to copy "smart money."
+
+This is fine if you have nothing to hide and don't mind being watched. It is **terrible** if you are, in any meaningful sense, a normal person trying to use DeFi for normal financial reasons.
+
+[INTERACTIVE: side-by-side]
+**A typical DeFi user's exposure on a transparent chain:**
+| What you do | What the world sees |
+|---|---|
+| Deposit savings into Aave | Your address holds $X in aUSDC |
+| Take a loan to buy ETH | Your collateral, your debt, your liquidation price |
+| Provide liquidity on Uniswap V3 | Your range, your fees earned, your IL |
+| Sell ETH for stables | Your sell timing, your size, your trading PnL |
+| Claim airdrop tokens | Your eligibility, your linkability across protocols |
+
+Each of those rows is information that, in any traditional finance setting, would be confidential — protected by the financial institution. In DeFi today, it's broadcast.
+
+---
+
+## Beat 2 — The Concrete Harms
+
+This isn't about feelings. The leakage of DeFi data has measurable, repeatable consequences.
+
+**Front-running and sandwich attacks.** We covered this in Investigation 3. Every trade larger than a few hundred dollars is, in some sense, fair game for bots that read the mempool. The user pays the spread.
+
+**Predatory liquidations.** When your lending position approaches its liquidation threshold, bots watch you. They race each other to be first when you cross the line. The user gets the worst possible execution price.
+
+**Whale games and counter-positioning.** When a well-known address opens a large trade, copycat bots front-run it on every venue. The whale's edge erodes. The whale's response is to use private execution methods or off-chain venues — which fragment the market.
+
+**Stalking and harassment.** A user known to hold significant DeFi assets becomes a target. Phishing campaigns are personalized using publicly available wallet data. SIM-swap attacks are aimed at wallets known to control specific holdings. Physical extortion — yes, this happens — is targeted at known crypto-holders.
+
+**Career and personal cost.** A user's wallet, once linked to their identity, is a public record forever. Someone who experimented with DeFi at 22 has that history at 32 when they're applying for a security clearance, a corporate job, or a mortgage in a country with strict capital controls.
+
+**Strategic information leakage.** Funds and protocols leak their strategy by transacting publicly. Their trades and rebalances are read in real time. Anyone watching can build a picture of their playbook.
+
+[INTERACTIVE: simulator] The user picks a DeFi persona ("hobby trader," "small-fund manager," "DAO treasurer," "DeFi-curious salaried professional"). The simulator runs through a typical week of transactions and shows what's exposed: from front-run cost on individual trades to long-term reputational and security implications.
+
+These are not theoretical harms. They are operating today, on every transparent chain, every day.
+
+---
+
+## Beat 3 — What Private DeFi Actually Means
+
+Private DeFi on Aztec means: the protocol's contract has private state, public state, or both — and users interact with it through the same hybrid model we covered in Investigation 9.
+
+Concretely, here's what gets hidden vs. what stays visible.
+
+**Hidden by default:**
+
+- Your individual positions, balances, and PnL.
+- Your trade direction (you went long or short — outsiders can't tell).
+- Your trade size at the individual level.
+- Your specific entries, exits, and timing.
+- Your linkability across protocols (your "wallet identity" doesn't show up across services unless you choose to expose it).
+
+**Public by default:**
+
+- The protocol's aggregate state: total liquidity, total borrowed, total fees collected.
+- The protocol's solvency: is the total locked enough to back the total claims?
+- The protocol's parameters: interest rate curves, collateral factors, fee schedules.
+- Aggregate metrics: trading volume per epoch, activity levels, liquidation totals (without identifying liquidatees).
+
+The split is **deliberate**. Privacy isn't applied to everything indiscriminately. Aggregate auditability — the genuine value-add of public chains — is preserved. Only the per-user, per-action layer is hidden.
+
+This is the thing transparent chains can't do, and that fully-private chains do clumsily. Aztec's hybrid model maps onto financial reality: institutions and individuals get personal privacy, while protocols and the broader market keep aggregate visibility.
+
+[INTERACTIVE: reveal] A grid of DeFi primitives — DEX, lending market, options vault, yield aggregator, perp DEX, prediction market — each with two columns: "what's public on Aztec" vs "what's private on Aztec." Clicking each cell explains why that side of the boundary matters for that primitive.
+
+---
+
+## Beat 4 — Frontrunning, Defanged
+
+A specific point worth its own beat: the structural defeat of mempool-based MEV.
+
+On a transparent chain, every DEX trade enters the public mempool with full intent visible: which tokens, which direction, which size, with which slippage. Bots read this and use it.
+
+On Aztec, a DEX trade is a private function call. The chain sees:
+
+- A nullifier (some user spent a balance note).
+- A new commitment (the user got an output asset).
+- A proof that the AMM curve was respected.
+
+It does **not** see: which tokens, which direction, which size.
+
+This means classical sandwich attacks — where a bot reads "user is going to buy 5000 USDC of TOKEN" and front-runs them — **don't have any signal to attack**. The bot can see "some Aztec transaction occurred." It can't tell what the user is doing.
+
+There are subtleties. If a private DEX has a small number of liquidity pools, an observer might be able to use timing analysis or aggregate-volume changes to infer something about user activity in aggregate. The protocol design has to account for this, and good private DEX designs (using techniques like batch auctions, hidden routing, or noise injection) close most of the residual leakage.
+
+But the **structural** advantage is decisive: the bot economy that depends on reading user intent in the mempool simply doesn't apply to private Aztec transactions.
+
+[INTERACTIVE: simulator] User picks a trade size. The simulator shows the same trade on a transparent DEX vs. on an Aztec private DEX. On the transparent side, MEV bots extract value visibly. On the Aztec side, the bots see nothing actionable. The user watches their effective execution price improve correspondingly.
+
+---
+
+## Beat 5 — Composability With Public Liquidity
+
+A common worry about private DeFi: "if everything is private, you fragment liquidity and lose composability."
+
+This is true for fully-private chains. It is **not** true for Aztec. The hybrid model means:
+
+- A private DEX on Aztec can route through a **public** AMM on Aztec, drawing liquidity from a public pool while keeping the user's individual trade private.
+- A private lending position can be backed by **publicly-issued** collateral assets — meaning the collateral asset's supply, redemption rights, and audits are publicly verifiable.
+- A private fund can hold publicly-issued stablecoins, with the stablecoin issuer's reserve attestation publicly visible, while the fund's individual positions remain confidential.
+- A bridge from Aztec to L1 can move tokens between public and private state — letting users "shield" assets when they want privacy, "unshield" them when they want public DeFi composability.
+
+In practice, this means **the private DeFi user has the full Aztec ecosystem available**, with privacy as a property of *their interaction*, not a property of the entire ecosystem.
+
+---
+
+## Reveal
+
+Private DeFi on Aztec collapses what is currently a punishing exposure — every trade, every loan, every position broadcast to the world — into the structural privacy normal financial systems have always provided. Specifically:
+
+- **Per-user balances, positions, and trades are hidden.** The user is not surveilled.
+- **Aggregate protocol state remains public.** Solvency, depth, and overall health are auditable.
+- **MEV mitigation is structural, not bolted-on.** Bots can't front-run what they can't read.
+- **Composability with public state is preserved.** No island-of-privacy fragmentation.
+
+This is not a niche feature. **It is the structural fix to several of the largest, most-cited harms in DeFi today** — the ones that have driven institutional capital away from on-chain markets, that have driven privacy-conscious individuals away from DeFi entirely, and that have made building "DeFi for normal people" feel like building for a hostile environment.
+
+A private DEX on Aztec is the same shape — economically, mechanically, financially — as a DEX on Ethereum. The cost of using it is dramatically lower because the surveillance premium is gone. The accessibility is dramatically higher because the user isn't broadcasting their financial life.
+
+The next investigation goes to a related problem: identity. The same primitives that make private DeFi possible also enable a thing that has been hard to get right for fifty years — proving a property of yourself without revealing the underlying credential.
+
+## Codex Card
+
+> **Private DeFi**
+> Aztec lets users participate in DeFi protocols with private balances, private trades, and private positions — while public liquidity and aggregate metrics remain visible.
+> *Why it matters: it's the most direct, immediate use case where transparent chains have a clear-cut economic harm and Aztec offers a clear-cut fix.*
+
+## Code (optional)
+
+```rust
+// A private swap on a hybrid-state DEX, in Noir-style pseudocode.
+
+contract HybridDEX {
+    public total_liquidity_token_a: Field;
+    public total_liquidity_token_b: Field;
+
+    private fn swap_a_for_b(amount_in: Field, min_amount_out: Field) {
+        // Read user's private balance of token A
+        let user_balance_a = balances_a.get(context.msg_sender);
+        assert(user_balance_a >= amount_in);
+
+        // Compute the AMM output (constant product formula)
+        let amount_out = (total_liquidity_token_b * amount_in)
+            / (total_liquidity_token_a + amount_in);
+        assert(amount_out >= min_amount_out);  // user-defined slippage
+
+        // Update private balances and public reserves
+        balances_a.set(context.msg_sender, user_balance_a - amount_in);
+        balances_b.set(context.msg_sender, balances_b.get(context.msg_sender) + amount_out);
+        total_liquidity_token_a += amount_in;
+        total_liquidity_token_b -= amount_out;
+    }
+}
+```
+
+*Annotation: The trade direction (a-for-b), the size, and the user's identity are all hidden. The reserves move — observers can see the totals shift — but they can't trivially attribute the change to any specific user. With many concurrent transactions in the same block, the observer's ability to "demix" the source of any reserve change drops further. Compare this to Uniswap, where every swap broadcasts the swapper, the size, and the direction in plaintext.*

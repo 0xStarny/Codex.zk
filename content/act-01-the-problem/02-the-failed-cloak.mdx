@@ -1,0 +1,167 @@
+---
+act: 1
+number: 2
+slug: "the-failed-cloak"
+title: "The Failed Cloak"
+tagline: "We tried to bolt privacy onto Ethereum. Every attempt either broke, got banned, or got abandoned."
+estimatedMinutes: 8
+prerequisites: ["the-glass-house"]
+codexCard:
+  concept: "The mixer dead-end"
+  oneLine: "Bolt-on privacy tools on transparent chains end up either weak, sanctioned, or both."
+  why: "It proves privacy can't be a band-aid — it has to be the foundation."
+---
+
+## Hook
+
+*Noiro is at his desk before sunrise. A coffee, no longer hot. Three case files spread out: TORNADO. WASABI. MONERO.*
+
+"Yesterday I told you the chain was a glass house. Today I'm gonna show you what happens when you try to hang a curtain."
+
+*He pushes the TORNADO folder forward.*
+
+"Ten years of people trying to retrofit privacy onto a chain that wasn't built for it. Some of them worked, sort of. None of them lasted. Each one tells you something about why the next case in this Codex matters."
+
+---
+
+## Beat 1 — The Workaround That Almost Worked: Mixers
+
+The first big idea was simple. If the chain shows everything, **add noise to it**.
+
+A *mixer* is a smart contract that does roughly this: a hundred people each deposit exactly 1 ETH into the same pool. Later, each of them — using a one-time secret note — can withdraw 1 ETH to a fresh wallet. From the outside, you can see "100 ETH went in, 100 ETH came out." But matching a particular withdrawal to its original deposit becomes statistically hard.
+
+The most famous of these was **Tornado Cash**, deployed on Ethereum in 2019. It worked. It was open source, non-custodial, used real cryptography (it was actually one of the earliest production uses of zero-knowledge proofs — we'll come back to that), and at peak it processed billions of dollars in shielded volume.
+
+For a moment, it looked like the answer.
+
+[INTERACTIVE: animation] A simple diagram showing 5 colored coins entering a pool, swirling, then exiting in the same colors but in scrambled order. Then the same scene with 100 coins — and the user's task is to "match the deposit to the withdrawal." The matching becomes visibly impossible as the pool grows.
+
+*Noiro nods at the diagram.*
+
+"Bigger the pool, better the cloak. That's the whole game."
+
+---
+
+## Beat 2 — The Cracks
+
+Three problems showed up.
+
+**First: anonymity sets are smaller than they look.** A mixer with 100 deposits sounds like 1-in-100 odds of unmasking. But if 80 of those depositors withdraw to wallets that are themselves linked to identifiable activity, your effective anonymity set shrinks to 20. Or 5. Or, in some real cases, just you. The cloak only worked if everyone using it stayed disciplined — and most users didn't.
+
+**Second: the entry and exit points are still public.** A mixer hides what happened *inside* the contract. It does not hide that you used a mixer. The world can see your wallet sent funds to Tornado Cash. The world can see another wallet receive funds from Tornado Cash a week later. Pattern-matching tools — timing analysis, value analysis, network analysis — can often reconnect the dots even when the mixer itself was perfect.
+
+**Third — and this is the one that killed the project — *the mixer can't tell good users from bad ones*.**
+
+[INTERACTIVE: side-by-side]
+| The cloak's problem |  |
+|---|---|
+| Person A deposits 1 ETH | They want privacy from a stalker |
+| Person B deposits 1 ETH | They want privacy from a tax authority |
+| Person C deposits 1 ETH | They are laundering ransomware proceeds |
+| **All three look identical to the contract.** | |
+
+A pure mixer is a public utility. It cannot ask why you want privacy, and it cannot withhold its service from someone whose reason is criminal. That neutrality is, in a free-society sense, a feature. In a regulated-finance sense, it's a fatal liability.
+
+---
+
+## Beat 3 — The Sanction
+
+In August 2022, the United States Treasury sanctioned Tornado Cash itself — not the developers, not specific users, but **the smart contract addresses**. It was the first time in history that a piece of autonomous, immutable code was placed on a national sanctions list. Interacting with the contract from a US-touching service became a federal offense.
+
+*Noiro lays the folder flat.*
+
+"Pause on that for a second, kid. They didn't sanction a person. They sanctioned a string of code that runs by itself, on a network nobody owns. That's how broken the conversation got."
+
+The legal arguments are still being fought in court, years later. But the **practical effect was immediate**. Major front-ends were taken offline. Centralized exchanges flagged any wallet that had ever touched the contract. Developers were arrested. The pool drained. The cloak — even for the legitimate users — was effectively burned.
+
+This was the first big lesson: **on a transparent chain, even a privacy tool that works can be turned off.** Because the tool is visible, and so are its users, the choke point sits right there for any sufficiently determined regulator.
+
+---
+
+## Beat 4 — The Other Attempts
+
+Tornado Cash was the headline. Other approaches were tried in parallel:
+
+**Privacy coins** like Monero and Zcash built privacy into the *base layer* of their own chain. This works much better than a bolt-on mixer (we'll see exactly why in Act II). But it isolates the privacy to that one chain. A Monero user holds Monero. They can't easily participate in DeFi, hold mainstream stablecoins, interact with Ethereum apps, or use the rest of the on-chain economy without leaving the cloak.
+
+**CoinJoin** wallets like Wasabi and Samourai pooled Bitcoin transactions across users to break linkability. Same idea as a mixer, applied at the wallet level. Same problems: limited anonymity sets, identifiable entry/exit, regulatory pressure. Samourai's developers were arrested in 2024.
+
+**State channels and Layer 2s** offered some incidental privacy by moving activity off the main chain. But "off-chain" wasn't the same as "private" — most rollups settle back to a public ledger eventually, and the off-chain operator typically sees everything.
+
+[INTERACTIVE: reveal] A grid of 6 historical privacy attempts, each represented as a card. Clicking each card flips it to reveal: **what it tried to do**, **why it didn't last**, and **the year it broke or was sanctioned**. *(Tornado Cash, Wasabi/Samourai, Aztec V1 (the original mixer-shaped Aztec), Monero on exchanges delisting, Zcash adoption struggles, on-chain privacy stablecoins.)*
+
+The pattern is consistent. Every workaround was either:
+- Too weak (small anonymity set, leaky entry/exit), or
+- Too narrow (privacy on its own island, cut off from the rest of the economy), or
+- Too binary (no way to selectively prove your transaction is legitimate without giving up the privacy entirely).
+
+---
+
+## Beat 5 — The Real Lesson
+
+*Noiro pours another coffee. The window is gray with morning.*
+
+"Each of these failed for a different reason. But there's a thread running through all of them, kid, and it's the only thing I want you to take from this case."
+
+The thread is this: **all of them tried to add privacy to a chain that didn't support it natively.**
+
+- Mixers add privacy by *obfuscation*. The chain still sees everything; it's just harder to interpret.
+- Privacy coins add privacy by *isolation*. They have it, but you can't bring it across the wider ecosystem.
+- Off-chain workarounds add privacy by *removal*. The activity isn't on a public chain anymore — but neither is it usable in the way on-chain assets are.
+
+None of them treat privacy as a **first-class primitive** of the chain itself. They all treat it as a layer you bolt on after the fact. And every bolt-on becomes brittle: it's identifiable, it's choke-pointable, it's regulatable as a separate thing.
+
+The thing that's actually needed — and what nobody had built, until very recently — is a chain where **privacy is the default, not the exception**. Where every contract author can declare "this state is private" and the chain enforces it cryptographically. Where the user doesn't have to opt into a special tool, with a special UX, and a special legal risk profile. Where private and public state coexist on the same chain, in the same transactions, without seams.
+
+That's a much harder thing to build. It requires zero-knowledge cryptography baked into the consensus layer. It requires a new programming model. It requires rethinking accounts and gas and verification from the ground up.
+
+It also turns out to be possible.
+
+---
+
+## Reveal
+
+The privacy bolt-on era was ten years of valiant, smart, ultimately dead-end work. The lesson it teaches is structural:
+
+**You cannot patch privacy onto a public-by-default chain. Every patch becomes a target — for analytics, for regulation, for failure.**
+
+The remaining cases of this Codex are about a different bet: that the answer is not a better cloak, but a building **made of different glass from the start.** Glass you can see through when you choose to, and through which nothing leaks when you don't.
+
+But before we get to that solution, two more cases. Because the cost of leaving the chain transparent isn't just "your wallet is public." It's a series of *very specific* economic harms that the system imposes on its own users, every day, in ways most newcomers don't see.
+
+That's the next case.
+
+## Codex Card
+
+> **The mixer dead-end**
+> Bolt-on privacy tools on transparent chains end up either weak, sanctioned, or both.
+> *Why it matters: it proves privacy can't be a band-aid — it has to be the foundation.*
+
+## Code (optional)
+
+```solidity
+// A simplified mixer contract. Notice the structure:
+// - users deposit fixed-size amounts
+// - each deposit issues a "commitment" (a hash of a secret)
+// - withdrawing requires a zero-knowledge proof that you own *some* commitment in the set
+// - but the contract address itself, and the deposits/withdrawals, are still visible on-chain.
+
+contract Mixer {
+    mapping(bytes32 => bool) public commitments;
+    mapping(bytes32 => bool) public nullifiers;
+
+    function deposit(bytes32 commitment) external payable {
+        require(msg.value == 1 ether, "fixed denomination");
+        commitments[commitment] = true;  // public event
+    }
+
+    function withdraw(bytes32 nullifier, /* zk proof */ bytes calldata proof) external {
+        require(!nullifiers[nullifier], "already spent");
+        // verify the proof that nullifier corresponds to *some* commitment
+        nullifiers[nullifier] = true;     // public event
+        payable(msg.sender).transfer(1 ether);
+    }
+}
+```
+
+*Annotation: This is roughly the shape of every mixer ever built. The cryptography (the zk proof in `withdraw`) is sophisticated. The problem is everything around it: fixed denominations create user-hostile UX, the contract is a single sanctionable target, and a chain analyst still sees who deposited and who withdrew — they just can't trivially link the two. **Privacy as a side-pool, not as a property of the chain.**)*

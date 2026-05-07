@@ -1,0 +1,156 @@
+---
+act: 2
+number: 7
+slug: "the-recursion-trick"
+title: "The Recursion Trick"
+tagline: "A proof that proves a proof. The thing that turned ZK from clever into industrial."
+estimatedMinutes: 8
+prerequisites: ["the-magic-door", "three-letters-snark"]
+codexCard:
+  concept: "Recursive proofs"
+  oneLine: "A zk-SNARK can verify another zk-SNARK inside itself — letting you compress huge computations into a single tiny proof."
+  why: "It's the structural reason ZK rollups (and Aztec's privacy layer) actually scale."
+---
+
+## Hook
+
+*Noiro is at a chalkboard. He draws a small box, then a smaller box inside it, then a smaller one inside that, then a fourth one even smaller.*
+
+"Tell me what's strange about this picture, kid."
+
+*He steps back.*
+
+"Each box is a proof. Each box says, 'the boxes inside me — I checked them, they're fine.' The outer one verifies the next, which verifies the next, which verifies a million transactions at the bottom."
+
+*He sets down the chalk.*
+
+"From outside, you only see the outermost proof. One file. A few kilobytes. Verified in milliseconds. And what it's actually telling you is *one million different things were each computed correctly*. That's not a metaphor. That's the trick."
+
+---
+
+## Beat 1 — The Problem We're Solving
+
+We left Investigation 6 with a powerful idea: a SNARK lets the chain verify a complicated computation in milliseconds, without re-running it.
+
+But there's a subtle limit. A single SNARK proof has a fixed cost: proving it takes a certain amount of resources, and that cost grows with the size of the underlying computation. If you want to prove "this user did one transaction," fine — that's a small computation. If you want to prove "this **rollup batch of 10,000 transactions** all executed correctly," now your prover has to do 10,000 transactions' worth of work, all in one go, before any single proof can come out.
+
+That's a serious bottleneck. Provers run on real hardware. Memory and time scale with the size of the proven computation. Even on big machines, a single proof of 10,000 transactions can take many minutes to generate.
+
+What if there was a way to break the work into chunks — prove each chunk independently, in parallel — and then **bundle the proofs together** into one proof that says "all the chunks were correct"?
+
+That's exactly what recursion gives you.
+
+---
+
+## Beat 2 — A Proof Inside A Proof
+
+Recall what a SNARK is: it verifies an arbitrary computation, including any computation that can be expressed as a circuit.
+
+Here's the moment the field tilts: **the act of verifying a SNARK is itself a computation that can be expressed as a circuit.**
+
+Which means: you can write a SNARK that verifies *another SNARK*. The outer proof's claim is something like, "I verified the inner proof, and it was valid." The outer proof doesn't redo the inner proof's work; it just confirms the inner proof's correctness.
+
+That single observation has staggering consequences.
+
+[INTERACTIVE: animation] Layered shapes. Layer 0: ten thousand individual transactions. Layer 1: 1,000 proofs (each covering 10 transactions). Layer 2: 100 proofs (each covering 10 of the lower-layer proofs). Layer 3: 10. Layer 4: 1. The user watches the pyramid build, then sees the final tiny proof — verified in milliseconds — that attests to all 10,000 transactions at the bottom.
+
+The structure is a tree. Each parent proof verifies its children. The root proof — the one you put on-chain — verifies everything, transitively.
+
+---
+
+## Beat 3 — Three Things This Buys You
+
+**1. Massive parallelism.** Each leaf proof can be generated independently, on independent machines. You're no longer limited by the speed of any single prover. A network of ten thousand provers can produce ten thousand leaf proofs in the time it takes one prover to make one. Then a smaller pool aggregates them recursively. The throughput potential is essentially unbounded.
+
+**2. Constant on-chain cost.** No matter how many transactions are bundled into the tree, the chain only verifies **one** proof at the root. The cost on-chain is roughly the same whether the root is summarizing 100 transactions or 10 million. That's the structural property that makes zk-rollups work, and it's why a rollup can offer transactions at a fraction of L1 cost.
+
+**3. Composability of proofs across computations and across time.** A user who has, say, a "proof of solvency" attested by a chain in 2026 can include that proof inside a *new* proof generated in 2027 — and the 2027 proof carries forward the validity of the 2026 statement, without re-doing the underlying computation. Proofs accumulate. They don't decay.
+
+[INTERACTIVE: side-by-side]
+**Without recursion vs. With recursion:**
+| Property | Without | With |
+|---|---|---|
+| Proof generation | Sequential, single-machine | Parallel, distributed |
+| On-chain cost | Grows with computation | Roughly constant |
+| Proof size on-chain | Grows with batch | Constant |
+| Proof composability | Limited | Across time and protocols |
+| Practical batch size | Small (latency-bound) | Effectively unbounded |
+
+---
+
+## Beat 4 — Aztec's Use Of Recursion
+
+Aztec specifically uses recursion in two structural places:
+
+**On the user side: client-generated proofs.** When you make a private transaction on Aztec, your *own device* (your browser, your phone) generates a proof attesting that your transaction obeys the rules — without revealing your private state to the network. These individual user proofs are then aggregated by sequencers using recursion, into one block-level proof that the chain verifies.
+
+This is a structurally important property. **The privacy of your transaction is protected because the prover (your device) is the only thing that ever sees your private state.** The sequencer aggregating proofs sees only proofs — small, opaque files that reveal nothing.
+
+**On the rollup side: block-level proofs.** Aztec is a Layer 2 rollup that posts a proof of its entire block's validity to Ethereum. That single proof attests to all the user-level proofs aggregated below it. The Ethereum L1 verifies one proof; everything beneath it is rolled up.
+
+Recursion is what holds these two layers together. Without it, every user transaction would have to be verified individually on Ethereum — defeating the privacy guarantees and the scalability benefits both at once.
+
+[INTERACTIVE: animation] A vertical stack. Bottom: a row of users on phones/laptops, each generating a proof. Middle: a sequencer aggregating the user proofs into a block-level proof. Top: Ethereum L1 verifying the single block-level proof. Arrows show information flow — but nowhere does any private user data flow upward. Only proofs.
+
+---
+
+## Beat 5 — The Cost Model, Honestly
+
+Recursion is a force multiplier, not a free lunch. Two practical realities:
+
+**Recursive proofs are heavier per-step than ordinary ones.** Verifying a SNARK inside another SNARK is one of the more expensive operations a prover has to do. The trade is justified only when the alternative — a single huge proof, or many tiny proofs all verified on-chain — is more expensive overall. For modern systems, that trade overwhelmingly favors recursion. But recursive proving systems are non-trivial to build, and a lot of cryptography research has gone into making them efficient (Halo2, Nova, Plonky2, etc.).
+
+**The cryptographic machinery has to support it.** Not every SNARK system natively supports efficient recursion. Some require expensive workarounds; others are designed for recursion from the ground up. Aztec's proving back-end is being engineered specifically with recursive aggregation in mind, which is why its performance trajectory is improving over time as the cryptography improves.
+
+[INTERACTIVE: reveal] A short timeline of recursive ZK systems and the year each major capability arrived: Halo (2019), Halo2 (2021), Nova (2022), Plonky2 (2022), Lasso/Jolt (2024). Clicking each entry reveals what it improved over its predecessor.
+
+---
+
+## Reveal
+
+Recursion is the property that turns SNARKs from "interesting cryptography" into "scalable infrastructure." It is the structural reason a chain like Aztec can support millions of private transactions without melting under the load:
+
+- **Each user proves their own transaction privately, on their own device.**
+- **Sequencers aggregate user proofs recursively into batch proofs.**
+- **Batch proofs are aggregated recursively into block proofs.**
+- **The L1 verifies a single, tiny block proof.**
+
+The whole pyramid is invisible from the outside. From the chain's perspective, Aztec posts one proof per block. That proof transitively certifies thousands of private transactions, each generated by individual users who never had to expose their own state.
+
+This isn't a future capability. Recursive ZK proving is in production today, on multiple networks. The performance numbers are still improving year over year — but the **structural feasibility** is no longer in doubt.
+
+We've now done the cryptographic foundation. SNARKs (the proof shape), recursion (the scale-up). One more case in this Act, and then we leave the temple.
+
+The question worth answering before we go: ZK is not the only privacy-preserving cryptographic technique in the world. There's MPC, there's FHE, there's TEEs — each with its own pitch. Why is *ZK* the one that won the blockchain bet, specifically?
+
+That's the last case of Act II.
+
+## Codex Card
+
+> **Recursive proofs**
+> A zk-SNARK can verify another zk-SNARK inside itself — letting you compress huge computations into a single tiny proof.
+> *Why it matters: it's the structural reason ZK rollups (and Aztec's privacy layer) actually scale.*
+
+## Code (optional)
+
+```rust
+// Pseudocode (not actual Noir) showing the shape of a recursive proof.
+// Each level wraps and verifies the level below.
+
+fn verify_inner_proof(inner: Proof, public_inputs: PublicInputs) -> bool {
+    // Check that `inner` is a valid SNARK proof for the given public inputs.
+    snark_verify(inner, public_inputs)
+}
+
+fn outer_proof(
+    inner_a: Proof, inputs_a: PublicInputs,
+    inner_b: Proof, inputs_b: PublicInputs,
+) {
+    // The "computation" the outer proof attests to is just:
+    //   "I verified two inner proofs and they were both valid."
+    assert(verify_inner_proof(inner_a, inputs_a));
+    assert(verify_inner_proof(inner_b, inputs_b));
+}
+```
+
+*Annotation: The outer proof's circuit doesn't redo the work that the inner proofs did. It only checks the inner proofs' validity. That's the trick. A multi-step computation can be split into chunks, each chunk proven separately, and the chunks combined recursively into a single root proof. The chain only verifies the root.*

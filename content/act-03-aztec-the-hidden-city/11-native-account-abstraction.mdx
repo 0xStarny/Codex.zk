@@ -1,0 +1,195 @@
+---
+act: 3
+number: 11
+slug: "native-account-abstraction"
+title: "Native Account Abstraction"
+tagline: "Every account on Aztec is a smart contract. Not as an upgrade — by design, from day one."
+estimatedMinutes: 8
+prerequisites: ["public-private-hybrid", "noir-the-universal-language"]
+codexCard:
+  concept: "Native account abstraction"
+  oneLine: "Aztec has no externally-owned accounts. Every account is a smart contract, which makes signing rules, key recovery, and authorization fully programmable."
+  why: "Combined with privacy, it lets users define their own security policies — a building block other chains have spent years bolting on."
+---
+
+## Hook
+
+*Noiro is in another chamber of the temple. Stone bowls of water along the walls. A stone bench. He gestures for the reader to sit.*
+
+"There's a thing about Ethereum that nobody designs around because everybody got used to it. You have an account. Your account is a private key. You sign transactions with that key. If you lose the key, you lose the account. If someone else gets the key, they own the account. End of story."
+
+*He leans forward.*
+
+"That model isn't bad. It's just *one specific design choice* — the simplest one possible — that became universal because the chain shipped with it in 2015 and nobody's been able to change it since."
+
+*He shakes his head.*
+
+"Aztec made a different call. There are no plain-key accounts. Every single account is a contract. Period. From the first block. **It's the most underrated decision the chain made.**"
+
+---
+
+## Beat 1 — What Ethereum Got Stuck With
+
+Ethereum has two types of accounts:
+
+- **Externally-Owned Accounts (EOAs)** — controlled by a private key. Most users have these. The signing scheme is fixed: ECDSA over secp256k1.
+- **Contract Accounts** — controlled by code. Smart contracts, in other words. Don't have keys themselves; can be called by transactions.
+
+For ten years, EOAs were the user-facing concept. Your wallet was an EOA. Your friend's wallet was an EOA. Your hardware wallet, your seed phrase, your mnemonic — all of it pointed to one fixed signing scheme over one fixed curve.
+
+That meant:
+
+- **One signature scheme** (ECDSA secp256k1). Want to use a different one (Ed25519, BLS, post-quantum)? Sorry, your account can't.
+- **One signer at a time.** Want a multisig? You have to use a separate contract that owns assets on your behalf — and now that contract is your "real" account, with all the UX overhead that implies.
+- **No spending limits, no whitelists, no time locks** at the account level. Want to enforce "this key can only spend up to 100 USDC per day"? Build it yourself in a contract.
+- **Lose the key, lose the account.** No social recovery. No backup mechanism. No "wait 30 days then a friend can re-grant access." Anything resembling that has to be a separate contract.
+
+The Ethereum ecosystem has spent years bolting on solutions to these limitations:
+
+- **EIP-4337 ("account abstraction") shipped in 2023**, giving Ethereum a way to deploy "smart accounts" via a specialized infrastructure layer (bundlers, paymasters, entry points). It works. It's also a complex retrofit on top of the original EOA model.
+- **EIP-7702 (2024)** lets EOAs *temporarily delegate* to contract logic. Useful, but a band-aid.
+
+Both are improvements. Neither is what you'd design from scratch.
+
+[INTERACTIVE: reveal] A diagram of Ethereum's account stack — EOAs at the base, ERC-4337 layer, EntryPoint contracts, Paymasters, Bundlers, etc. — with each layer expanding to show the complexity it adds. The user clicks "show what AA users have to coordinate." Cards reveal the parties involved (smart wallet, paymaster, bundler, entry point) just to make a single transaction.
+
+---
+
+## Beat 2 — Aztec's Choice: No EOAs
+
+Aztec's approach was to **not have EOAs at all**.
+
+On Aztec, every account is a smart contract. There is no "primary" key-pair account type. When you create a wallet on Aztec, what you're really doing is deploying a small contract whose code defines:
+
+- **What constitutes a valid signature for this account.**
+- **What checks are run before any transaction is authorized.**
+- **What other rules govern what this account can do.**
+
+And critically: **all of this code is in Noir, written by anyone.** A wallet provider can ship one default account contract. Power users can deploy custom ones. Multisigs, time-locks, spending limits, social recovery, custom signature schemes — all are first-class, implemented at the account level by the same language used for everything else.
+
+In Ethereum-with-ERC-4337, account abstraction is a feature you can opt into, with infrastructure overhead. On Aztec, it's the only available account model. The two states ("ordinary user" and "advanced user with smart account") collapse into one.
+
+[INTERACTIVE: side-by-side]
+**Account models compared:**
+| Property | Ethereum EOA | Ethereum + ERC-4337 | Aztec native AA |
+|---|---|---|---|
+| Account is a contract? | No | Optionally | **Always** |
+| Custom signature schemes | No | Yes (with infra) | **Yes (free)** |
+| Multisig at account level | No (separate contract) | Yes (with infra) | **Yes (free)** |
+| Social recovery | No | Yes (with infra) | **Yes (free)** |
+| Spending limits | No | Yes (with infra) | **Yes (free)** |
+| Bundler / paymaster infrastructure | N/A | Required | **Built into chain** |
+
+---
+
+## Beat 3 — What This Unlocks, Concretely
+
+Native AA, on its own, is a quality-of-life improvement. Combined with Aztec's privacy model (Investigation 9), it's qualitatively different. A few concrete examples:
+
+**Programmable spending policies, privately.** A user's wallet enforces "max 1 ETH per day to non-whitelisted addresses." The whitelist itself is private. The daily spending state is private. Other parties see only that the wallet's transactions were authorized by some valid policy.
+
+**Social recovery without doxxing your guardians.** Users designate guardians ("if I lose my key, these N people can together restore access"). The guardians' identities are private. The chain only sees that recovery was authorized by a valid quorum proof.
+
+**Custom signature schemes, including post-quantum.** A wallet author can ship an account contract that uses Ed25519, BLS, or post-quantum lattice schemes — without waiting for a chain-level upgrade. The verifier code is in Noir. The chain runs whatever Noir compiles to.
+
+**Per-application authorization rules.** A wallet can require different signature thresholds for different actions. "Send up to 10 USDC: one signature. Send to a new address: two signatures plus a 24-hour delay. Send my entire balance: three signatures plus a phone confirmation through this off-chain service."
+
+**Identity-bound accounts.** An account can require that the signer additionally produce a ZK proof of some identity property — e.g. "this transaction is only authorized if the signer is over 18 and a citizen of country X" — without ever revealing the underlying credentials.
+
+[INTERACTIVE: simulator] The user designs their own account by toggling features: "require multisig of 2 out of 3 guardians for amounts > 100 USDC," "use Ed25519 instead of ECDSA," "allow recovery via 4 of 7 social guardians after 14 days," "require a private proof of age over 18." The simulator generates a Noir-style account contract on the fly and shows what happens when various transaction attempts hit it.
+
+---
+
+## Beat 4 — Privacy + AA: The Hidden Synergy
+
+The interaction between native account abstraction and the privacy model is more important than either feature alone.
+
+Consider: on Ethereum (even with ERC-4337), your account contract's code is **public**. Any rule you encode — "this address is a guardian," "this is the recovery threshold," "this is the spending limit" — is visible to the world. An attacker can read your account contract before targeting you. A surveillance firm can build a profile of your security posture.
+
+On Aztec, your account contract's code is public (everyone can see the contract bytecode), but the **state your account contract reads from** can be private. So:
+
+- The **rules** are public ("this account uses a multisig with N-of-M guardians").
+- The **specific guardians** can be private. The chain knows only that "some valid set" signed.
+- The **specific spending caps** can be private. The chain knows only that the cap was respected.
+- The **specific actions taken** can be private. The chain knows only that some authorized action happened.
+
+This means an attacker observing your wallet from outside knows roughly *what your security model looks like* (because the contract is public), but not *the parameters of that model* — and not even *who you are*, because the transactions themselves are private.
+
+That's a meaningful step up in user-side security. Surveillance no longer trivially feeds into targeting.
+
+---
+
+## Beat 5 — The UX Promise (And Reality)
+
+A common AA promise is "now grandma can use crypto." That's still partially aspirational. Native AA isn't a magic solution to all crypto-UX problems. It's a foundation that makes good UX possible — but the wallets and applications still have to build on top of it.
+
+What native AA on Aztec genuinely enables, in practice:
+
+- **Gasless transactions.** A wallet can sponsor user transactions (via a paymaster-like mechanism) so users don't need to hold the chain's gas token to interact. The fee is paid by the wallet operator or the dApp.
+- **Session keys.** A user signs once to grant a temporary, scoped key to a dApp ("this game can move my in-game tokens for the next 4 hours, up to 1000 of them"). Subsequent in-game actions require no further signatures.
+- **Recovery flows that don't require seed phrases.** With native social recovery, users can be onboarded without ever seeing or storing a seed phrase.
+- **Familiar auth.** A wallet can use WebAuthn/passkeys instead of (or in addition to) traditional crypto signatures, letting users authenticate with the same biometric flow they use for banking apps.
+
+What it doesn't fix on its own: bridging UX, gas estimation, error messages, rollup confirmation latency, fiat onramps. Those require their own work.
+
+[INTERACTIVE: reveal] A user-journey comparison: "first 10 minutes with a new wallet" on Ethereum vs. on Aztec. The Ethereum side has ten or so friction points (seed phrase, ETH for gas, slow tx, etc.). The Aztec side has fewer, with native AA addressing several of them. The user can hover each step to see what's happening behind the scenes.
+
+---
+
+## Reveal
+
+Native account abstraction means **the boundary between "key-holder" and "smart wallet" is gone**. On Aztec, every account is a contract, written in Noir, with arbitrary authorization rules. Combined with the privacy model:
+
+- **Programmable security policies** — multisig, spending limits, time locks, recovery — without any extra infrastructure layer.
+- **Custom signature schemes** — including post-quantum — without chain-level upgrades.
+- **Privacy-aware policies** — guardians, caps, and action types can be hidden state, with only the proof of compliance visible to the chain.
+
+This is the third architectural bet of Aztec: **make every account a fully programmable, privately-stateful smart contract by default**. Not as a feature on top of a simpler model. As the model.
+
+We've covered three big distinctives: hybrid state (Investigation 9), Noir as the language (Investigation 10), and native AA (this one). The next case lays them next to comparable choices made by other ZK chains — to show what Aztec's combination uniquely offers, and what it gives up.
+
+## Codex Card
+
+> **Native account abstraction**
+> Every account on Aztec is a smart contract, which makes signing rules, key recovery, and authorization fully programmable.
+> *Why it matters: combined with privacy, it lets users define their own security policies — a building block other chains have spent years bolting on.*
+
+## Code (optional)
+
+```rust
+// A simplified Noir-style account contract on Aztec.
+// Defines: a multisig with private guardians and a daily spending cap.
+
+contract MultisigAccount {
+    // Guardians (their public keys) — stored privately.
+    private guardians: PrivateSet<PublicKey>;
+
+    // Daily spending tracker — public in this version, but easily private.
+    public daily_spent: Field;
+    public day_id: Field;
+
+    // The single hook every account contract must implement.
+    private fn validate_transaction(
+        tx_hash: Field,
+        signatures: [Signature; 3],
+        amount: Field,
+    ) {
+        // Reset daily counter if it's a new day.
+        let today = current_day();
+        if today != day_id {
+            daily_spent = 0;
+            day_id = today;
+        }
+
+        // Enforce the daily cap (assume DAILY_CAP = 1000).
+        assert(daily_spent + amount <= DAILY_CAP);
+        daily_spent += amount;
+
+        // Require 2-of-3 valid guardian signatures, hidden from the chain.
+        let valid = guardians.count_matching_signatures(tx_hash, signatures);
+        assert(valid >= 2);
+    }
+}
+```
+
+*Annotation: This whole contract is the account. Anyone interacting with this address triggers `validate_transaction`. The signature scheme, the multisig threshold, the spending cap, the time-window logic — all of it is defined by this single Noir contract. The chain runs it; the user owns the policy.*

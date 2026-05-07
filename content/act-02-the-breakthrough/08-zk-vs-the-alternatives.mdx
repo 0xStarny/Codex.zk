@@ -1,0 +1,174 @@
+---
+act: 2
+number: 8
+slug: "zk-vs-the-alternatives"
+title: "ZK vs. The Alternatives"
+tagline: "Trusted hardware, multi-party computation, fully homomorphic encryption — they all promise privacy. Here's why ZK won the blockchain bet."
+estimatedMinutes: 9
+prerequisites: ["the-magic-door", "three-letters-snark", "the-recursion-trick"]
+codexCard:
+  concept: "Why ZK won (for blockchain)"
+  oneLine: "On a permissionless, trustless ledger, ZK proofs are the only privacy technique that doesn't require trusting hardware, parties, or future computation."
+  why: "It explains the strategic bet behind Aztec, and why other privacy stacks fit better off-chain."
+---
+
+## Hook
+
+*Noiro spreads four cards across the table. Each one has a four-letter acronym on it: ZK, MPC, FHE, TEE.*
+
+"Final case of this Act. It's a comparison."
+
+*He taps the cards.*
+
+"All four of these promise some form of privacy-preserving computation. Each one is real. Each one is being shipped, somewhere, by someone, today. But only one of them — the one we've been talking about — actually fits a public, permissionless blockchain. The other three have legitimate uses. They just don't live in the same building as the chain."
+
+*He gathers the cards.*
+
+"Today we figure out why."
+
+---
+
+## Beat 1 — Four Approaches, In Plain English
+
+Before we compare, the basic shape of each:
+
+**ZK (Zero-Knowledge proofs)** — *what we've been covering.* You compute privately, then produce a small proof that the computation was correct. Anyone can verify the proof. No one learns the private inputs.
+
+**MPC (Multi-Party Computation)** — *several parties hold shares of a secret, and they compute a function of the secret without ever combining their shares.* The output is correct; no party ever sees the underlying inputs. Used in production for cryptographic key custody (Fireblocks, threshold signatures, etc.) and some financial settlement.
+
+**FHE (Fully Homomorphic Encryption)** — *you encrypt your data, send it to a server, the server does computation directly on the ciphertext, and sends back encrypted results that you decrypt locally.* The server never learns the plaintext. Mostly research-grade for general computation, though emerging in practical use cases (private inference, encrypted databases).
+
+**TEE (Trusted Execution Environment)** — *a piece of hardware (typically a CPU enclave like Intel SGX, AMD SEV, or Apple's Secure Enclave) processes data in a way that even the operating system can't see.* The user trusts the hardware vendor to have built it correctly and to not have backdoors.
+
+All four solve different shapes of "compute on data without exposing it." The differences are in **what you have to trust**, **what you can compose with**, and **how cheap the verifying side is**.
+
+[INTERACTIVE: reveal] Four cards laid out horizontally. Clicking each reveals (a) one-line summary, (b) what the user trusts in this model, (c) one real-world deployment of the technology. *(ZK: Aztec, zk-rollups. MPC: institutional custody, signing services. FHE: private ML inference experiments. TEE: Apple Pay, Signal contact discovery, some L1 chains.)*
+
+---
+
+## Beat 2 — The Question That Decides Everything: "What Do You Trust?"
+
+Strip everything else away, and the four techniques separate by exactly one question.
+
+| Technique | What you trust |
+|---|---|
+| **ZK** | Mathematics (and the open-source proving system) |
+| **MPC** | At least one out of N parties is honest |
+| **FHE** | Mathematics (and the encryption scheme's hardness) |
+| **TEE** | The chip vendor (Intel/AMD/etc.), forever, against bugs and supply-chain attacks |
+
+For an off-chain application, any of these can be the right answer. A bank using MPC to split a private key across three of its data centers? Fine — the bank trusts itself to keep at least one data center honest. A health-tech company using FHE to run analytics on encrypted patient records? Fine — they trust the math. A messaging app using TEEs for contact discovery? Fine — they trust Intel.
+
+For a public, permissionless blockchain, the calculus is different. The chain has no privileged operator. There's no party in a suit who can be sued if the system fails. Every user has to be able to verify, from first principles, that a transaction is valid — and that verification has to scale to thousands of nodes around the world.
+
+That's where ZK pulls ahead.
+
+---
+
+## Beat 3 — Why TEEs Don't Work For Public Chains
+
+A TEE-based privacy chain is one where each node runs computations inside a hardware enclave that other parties can't see into. Several projects have explored this. It works — until you ask: **what happens when the enclave is broken?**
+
+TEEs have been broken, repeatedly, over the past decade. Intel SGX has had multiple confirmed side-channel attacks (Foreshadow, Plundervolt, ÆPIC, more). AMD SEV has had similar issues. The chip vendors patch them — sometimes — and the world continues. For most TEE applications, this is acceptable: the attacker has to be sophisticated, the bug is patched within months, and the worst-case damage is limited.
+
+For a chain, this is structurally toxic. If a TEE is compromised, **every transaction it processed is now in the attacker's hands** — silently, retroactively, with no way for users to know. The privacy guarantee was conditional on hardware that turned out to be flawed. There's no recourse.
+
+The other problem is **trust dependency on a specific vendor.** A chain whose privacy depends on Intel SGX has effectively offshored a critical security property to one corporation. That's a strange architecture for a system whose entire value proposition is decentralization.
+
+[INTERACTIVE: reveal] A timeline of TEE-affecting CVEs from 2018 to today. Clicking each reveals: which vendor, which technique was broken, what was the patch (or whether the patch added new issues).
+
+ZK proofs don't have this property. Their security rests on **mathematical assumptions** that are public, peer-reviewed, and not under any vendor's unilateral control. If those assumptions are broken (e.g., quantum computers eventually breaking elliptic curve assumptions), the entire field knows it, and every chain in the world has to migrate together. The break isn't silent.
+
+---
+
+## Beat 4 — Why MPC And FHE Don't Quite Fit Either
+
+**MPC** — *the multi-party computation* — has a brilliant property: as long as some threshold of parties remain honest, the system is secure. But the assumption is "you can identify N specific parties who can run the protocol together." On a permissionless chain, this is exactly the wrong shape. A chain has thousands of validators worldwide, joining and leaving freely. Re-imagining "the validator set" as "the MPC committee for every transaction" has been tried. The complexity is enormous; the latency and bandwidth costs are punishing.
+
+There are useful **MPC sub-systems** in blockchain (threshold signatures, distributed key generation), but they typically operate at the infrastructure layer — managing keys, not transactions. As the privacy primitive of a chain, MPC has not won.
+
+**FHE** is the most exciting and most distant of the bunch. Compute directly on encrypted data, with no proofs and no parties to coordinate? Yes please. But FHE today is **slow**. For general computation, it can be six or more orders of magnitude slower than plaintext computation — meaning what takes you one second to compute normally takes you weeks under FHE. The hardware acceleration is improving rapidly, and recent results have been impressive, but for blockchain-scale throughput it remains research-grade.
+
+Notably, FHE and ZK aren't enemies — they compose well. A chain might one day use FHE *inside* a larger ZK-protected envelope, with each playing to its strengths. Some projects (Fhenix, Inco) are exploring exactly this. But for the next several years, ZK is the primitive doing the heavy lifting.
+
+[INTERACTIVE: side-by-side]
+**Performance comparison (orders of magnitude, illustrative):**
+| Technique | Verifier cost (per op) | Suitable for chain? |
+|---|---|---|
+| Plaintext (no privacy) | 1× | Yes, but no privacy |
+| **ZK proof** | ~1× (verify only) | **Yes, structurally a fit** |
+| MPC | Network-bound; high latency | Off-chain only, mostly |
+| FHE | 10⁴–10⁶× slower | Not yet (research) |
+| TEE | ~1× | Yes, but trust the vendor |
+
+These are gross orders of magnitude — actual numbers vary by computation. The point is the **shape**, not the precision: ZK is the one technique whose verifier overhead is **roughly free**, with no trust assumption beyond mathematics.
+
+---
+
+## Beat 5 — Why ZK *Specifically* Fits Blockchains
+
+Step back from the technical comparison and look at the four properties a privacy primitive needs to deploy on a public chain:
+
+1. **Verifiable by anyone, with no special hardware or trust assumption.** ZK ✓. TEE ✗. MPC ✗ (verifier needs to participate). FHE ✓ (in principle).
+2. **Compatible with permissionless validator sets.** ZK ✓. TEE ✗ (validators need specific hardware). MPC ✗ (validators must be a fixed committee). FHE ✓.
+3. **Composable with the rest of the chain.** ZK ✓ (proofs compose, including recursively). FHE limited (proof of correctness still needed; usually combined with ZK). MPC limited. TEE limited.
+4. **Verification cheap enough for chain-scale throughput.** ZK ✓ (milliseconds). FHE ✗ (orders of magnitude slow). MPC ✗ (network-bound). TEE ✓ (free, if you trust the hardware).
+
+ZK is the only one that hits all four cleanly, today, with no asterisk. That's the bet behind Aztec, behind Polygon zkEVM, behind StarkNet, behind every serious zk-rollup.
+
+That's not a permanent state of affairs. FHE is improving rapidly. Hybrid systems will arrive. The cryptographic landscape in 2035 might not look the same as 2026's. But the *strategic dominance of ZK for the rest of this decade*, on permissionless chains, is settled territory.
+
+[INTERACTIVE: simulator] The user picks a use case (private payment, private DeFi, private identity, private medical record). A small evaluator scores each technique against the four properties above. The user sees that for **on-chain** applications, ZK is the only consistently-green answer. For other contexts (centralized data analytics, institutional custody), other techniques score higher. The lesson: the question isn't "which technique is best?" — it's "which technique fits *this deployment context*?"
+
+---
+
+## Reveal
+
+This Act has answered the central technical question of the entire Codex:
+
+- **A zero-knowledge proof** lets you verify that a private computation was done correctly, without revealing the inputs. (Investigation 5.)
+- **A zk-SNARK** is the practical, blockchain-fit version of that — small, non-interactive, fast to verify. (Investigation 6.)
+- **Recursive composition** lets you bundle thousands or millions of these proofs into one, paying constant on-chain cost regardless of scale. (Investigation 7.)
+- **ZK** is, for blockchain specifically, **structurally the right primitive** — not because it's the only privacy technique, but because it's the only one that doesn't require trusting parties, hardware, or future cryptography in ways that conflict with the chain's permissionless nature. (Investigation 8.)
+
+You've now got the full cryptographic vocabulary. Next, we cross from "the cryptography is real" to "now what does someone actually build with it?"
+
+That's where the case file gets interesting. Because Aztec isn't the only chain with ZK at its heart. Several major networks are now built around exactly these primitives. Each makes different choices about *which* programs you can write privately, *which* state lives on-chain publicly, *which* parts of the system can be used through your existing wallet.
+
+Aztec made one specific set of choices. The next Act unpacks them — and shows what they unlock that other networks don't.
+
+*Noiro stands. Gathers the four cards. Pockets them.*
+
+"Pack a bag, kid. We're leaving the temples. The next Act is in the jungle. Bring water."
+
+## Codex Card
+
+> **Why ZK won (for blockchain)**
+> On a permissionless, trustless ledger, ZK proofs are the only privacy technique that doesn't require trusting hardware, parties, or future computation.
+> *Why it matters: it explains the strategic bet behind Aztec, and why other privacy stacks fit better off-chain.*
+
+## Code (optional)
+
+```rust
+// A useful intuition: in a ZK-based chain, the user's program looks ordinary.
+// In a TEE-based or MPC-based chain, the program is wrapped in trust assumptions
+// that have to be modeled separately. Here's the comparison in pseudo-form.
+
+// ZK approach (Noir-style, as in Aztec):
+//
+fn private_transfer(amount: Field, from: secret Address, to: pub Address) {
+    // The chain verifies a proof. No trust beyond math.
+    assert(balance(from) >= amount);
+    update_balances(from, to, amount);
+}
+
+// TEE approach (pseudo):
+//
+fn private_transfer_tee(amount, from, to) {
+    // The chain trusts that this code ran inside an Intel SGX enclave.
+    // Security depends on Intel's hardware design, ongoing patches, and absence of side-channels.
+    enclave_run(|| update_balances(from, to, amount))
+}
+```
+
+*Annotation: The ZK version's correctness is verified by the chain itself. The TEE version's correctness is asserted by Intel. For a permissionless system, the difference is structural — not a marginal preference.*

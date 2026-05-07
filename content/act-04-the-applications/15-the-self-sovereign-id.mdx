@@ -1,0 +1,190 @@
+---
+act: 4
+number: 15
+slug: "the-self-sovereign-id"
+title: "The Self-Sovereign ID"
+tagline: "Prove you're over 18, a citizen of country X, or non-sanctioned — without showing your passport."
+estimatedMinutes: 8
+prerequisites: ["private-defi"]
+codexCard:
+  concept: "Privacy-preserving identity"
+  oneLine: "ZK proofs let you prove specific properties about yourself, derived from real credentials, while revealing nothing else about your identity."
+  why: "It collapses the ID-or-anonymity binary that's broken every digital identity system to date."
+---
+
+## Hook
+
+*Noiro stops in front of a brutalist-looking government building. He looks up at the carved letters above the door: REGISTRY OF VITAL STATISTICS. He shakes his head.*
+
+"You ever notice how every time you have to prove who you are, you over-share? Walk into a bar. They want to know you're 21. You hand them a license. The license tells them your full name, your address, your height, your eye color, your organ donor status, the day you were born, and which bald photographer staffed the DMV that morning."
+
+*He lights a cigarette.*
+
+"That license was designed in 1962. It still works the way it worked in 1962. And when we tried to put identity online, we copied that pattern straight across. Total disclosure to verify a single fact. Every. Single. Time."
+
+*He exhales.*
+
+"Today's case is a different idea. The fact you actually want to share. Nothing else. And the credential underneath stays in your pocket."
+
+---
+
+## Beat 1 — The Old Pattern, Reapplied To The Web
+
+Here's how digital identity has worked for two decades.
+
+You sign up for a service. It needs to verify a property of you (you're a real person, you're over 18, you're a US citizen, you're not on a sanctions list, you have a verified bank account). To prove it, you upload:
+
+- A photo of your government ID.
+- A selfie. Often with you holding the ID.
+- A utility bill or bank statement.
+- Your full name, address, date of birth, sometimes social security number.
+
+The service files this in their database. Forever. They use it to verify the one property they actually cared about. Then they keep it because, hey, who knows when they'll need it again, and "let me just keep a copy" is the path of least resistance.
+
+This data sits in their database until — and this is when, not if — that database is breached. The data leaks. It's traded on dark markets. Phishing campaigns are built on it. Credit fraud spikes for the affected users. Apologies are issued. The cycle repeats with the next service.
+
+The pattern is so universal that it doesn't even feel strange anymore. We learned to live with it.
+
+But pause: **the service usually only needed *one bit of information*.** "Yes, this person is over 18." Or "yes, this person is a US resident." It received an entire dossier in order to extract one bit. The structural over-disclosure isn't a side effect. It's the system.
+
+[INTERACTIVE: reveal] A list of common online verification scenarios (signing up for crypto exchange, proving age for content, proving residency for a service, proving non-sanctioned status). For each, the user toggles "what was actually needed" vs. "what gets disclosed." The gap is large, in every single case.
+
+---
+
+## Beat 2 — What ZK Identity Looks Like, In Shape
+
+Zero-knowledge proofs collapse the gap.
+
+Picture this flow instead:
+
+1. You have a credential — a digital version of your passport, driver's license, or other government-issued ID — stored on your device.
+2. A service asks: "are you over 18?"
+3. Your device runs a Noir program that takes the credential as private input and produces a proof attesting "yes, the credential's date-of-birth field corresponds to an age over 18."
+4. You hand over the proof. Nothing else.
+5. The service verifies the proof. They get the bit they asked for. They learn nothing else — not your name, your exact age, your address, your nationality, your photo.
+
+The credential never leaves your device. The service never holds your data. The "data breach" surface area shrinks to almost nothing — there's nothing to leak because nothing was ever stored.
+
+This is **selective disclosure** at its purest. And, critically, it's not science fiction. The cryptographic machinery to do this has existed for years. Implementations are in active development. Several mature credential standards (like W3C Verifiable Credentials, the EU's eIDAS 2.0 framework, and zk-passport schemes built on government-issued e-passports) are being deployed.
+
+[INTERACTIVE: simulator] The user picks a credential type (digital passport, employer-issued attestation, university degree, age verification document). They pick a property to prove ("over 18," "US citizen," "non-sanctioned country"). The simulator generates a mock proof, shows what the verifier sees (just the bit), and shows what the verifier *doesn't* see (everything else on the credential).
+
+---
+
+## Beat 3 — Why Aztec Is Naturally Suited For This
+
+Identity proofs of this kind don't *require* Aztec specifically. A standalone Noir circuit, generating a proof verifiable on Ethereum L1 or off-chain, is enough for many use cases.
+
+So what does Aztec specifically add?
+
+Three things:
+
+**1. Persistent privacy-aware identity state.** A user's credentials, attestations, and proofs can live as private state in their Aztec account. Over time, their account contract accumulates a private identity surface — government ID, KYC attestation, professional credentials, reputation scores — all kept private, all queryable for proof generation as needed. Other chains require constant re-importing of credentials. Aztec's persistent private state means your identity primitives stay loaded.
+
+**2. Composable on-chain identity proofs.** A smart contract on Aztec can require, as part of its execution, that the caller produce specific identity proofs. "This DAO only accepts votes from addresses that can prove residency in country X." "This DEX only allows trades from non-sanctioned addresses." "This savings product is restricted to verified accredited investors." Each of these is a one-line predicate in a Noir contract — and each is enforced privately, with no leakage about *which* users have which credentials, only that the rule was satisfied.
+
+**3. Native account abstraction integration.** Recall Investigation 11. Account contracts can encode arbitrary authorization rules. An Aztec account can require, for high-value transactions, that the user additionally produce a private ZK proof of their identity (not just their key). Your wallet becomes an identity-aware actor — privately enforcing its own rules without revealing them to the world.
+
+[INTERACTIVE: side-by-side]
+**Identity flows compared:**
+| Step | Traditional KYC | Standalone ZK ID | ZK ID on Aztec |
+|---|---|---|---|
+| Upload credential | Yes (to the service) | No (proof only) | No (proof only) |
+| Service holds data | Yes, indefinitely | No | No |
+| Proof reusable | No (re-upload each time) | Per-app, with friction | Yes, persistent in account |
+| Composable with smart contracts | No | Limited | Native |
+| Selective disclosure granularity | None | Per-proof | Per-proof + per-protocol policy |
+
+---
+
+## Beat 4 — Concrete Use Cases
+
+This isn't speculative. There are real, in-flight applications. A few:
+
+**Sybil resistance for airdrops.** Crypto airdrops have been gamed for years by users running thousands of fake wallets to multiply their share. Privacy-preserving "proof of personhood" — using a credential like a verified phone number, a biometric, or an e-passport, with a ZK proof attesting "this is a real distinct person" — collapses sybil farming without revealing which person.
+
+**Compliance gating for DeFi.** Some institutional DeFi products want to restrict access to verified users in non-sanctioned jurisdictions, without storing user data themselves. ZK identity proofs let them gate access cleanly: the contract enforces compliance rules, the user presents a proof, no one stores anything.
+
+**Anonymous credentials.** A university issues a digital degree. The student can prove "I have a degree from this institution in this year, of this category" without revealing their name. Useful for anonymous academic forums, alumni gatherings, hiring pipelines that want to filter without bias.
+
+**Age-gated content.** A site can require ZK proof of age over 18 (or 21, or 13) without holding any user data. The user doesn't sign in; they verify a property. Content access policy is enforced; surveillance footprint is zero.
+
+**Voting in physical-world elections.** Multiple research groups have explored using e-passport-derived ZK proofs to enable verifiable, anonymous, sybil-free online voting in physical-world elections. The hardest part isn't the cryptography — the hardest part is the institutional adoption, which is moving slowly but is moving.
+
+**Privacy-preserving credit and lending.** A user can prove "my income exceeded X for the last Y months" or "my credit score is in this band" without revealing the underlying financial history. Lenders get the gate they need; borrowers don't sacrifice their financial privacy.
+
+[INTERACTIVE: reveal] Six cards. Each describes a real or in-flight project applying ZK identity. Clicking each shows: who's building it, what credential type, what property is being proven, what's still hard.
+
+---
+
+## Beat 5 — What Could Go Wrong (And What's Being Solved)
+
+It would be irresponsible to pretend this is solved. The honest list of open problems:
+
+**Credential issuance trust.** A ZK identity proof is only as trustworthy as the underlying credential. If the credential issuer (a government, a bank, an attestor) is sloppy or compromised, the proof loses meaning. Most adoption efforts are paired with mature, well-understood credential frameworks (e-passports, regulated KYC providers, government-backed identity systems) precisely to address this.
+
+**Revocation.** What happens if a credential needs to be revoked (a passport is invalidated, an attestor goes out of business, a user's status changes)? ZK identity systems include revocation mechanisms — typically using on-chain "revocation lists" that proofs cross-reference. The cryptography is well-understood; the operational deployment is still maturing.
+
+**User key management.** A user's identity is bound to a private key. Losing the key means losing the identity (or, more often, requiring re-issuance from the original issuer). Aztec's native account abstraction helps here — accounts can support social recovery, multi-device sync, and other key-recovery flows that make the worst-case scenarios less catastrophic.
+
+**Interoperability.** Different jurisdictions, different issuers, different proof formats. Standardization is happening (W3C Verifiable Credentials, eIDAS, ISO/IEC 18013 for mobile driving licenses) but is not finished. Until it's finished, building cross-jurisdiction ZK ID systems is non-trivial.
+
+**Public legitimacy.** A meaningful fraction of the public is suspicious of *any* digital identity system, regardless of its privacy properties. Some skepticism is reasonable; some is reflexive. Communicating clearly that ZK identity is fundamentally different from, say, China's social credit system — that the user holds the credential, the user generates the proof, and no central party sees it — is part of the work.
+
+[INTERACTIVE: reveal] Five cards listing the open problems. Each card has a "current best approach" line — not a "solved" claim, just a snapshot of how the field is handling it.
+
+---
+
+## Reveal
+
+ZK identity collapses one of the longest-standing dilemmas in digital systems. For decades, the design choice was binary:
+
+- **Disclose everything** to verify any property (the KYC pattern).
+- **Disclose nothing** and accept that some interactions are off-limits to you (the anonymous-internet pattern).
+
+ZK proofs make the third option real: **disclose only what's needed**, derived from a real credential, verifiable by anyone, holdable forever, leaking nothing else.
+
+On Aztec specifically, this becomes more than a one-off proof. It becomes a persistent, account-bound identity primitive that smart contracts can compose with — making applications privacy-aware at the policy layer, not just the data layer.
+
+The implications go beyond crypto. ZK identity is a candidate primitive for the post-2025 internet: a way to gate access, prove compliance, distribute resources, and coordinate humans online without the broken pattern of disclose-and-store that has defined the last twenty-five years.
+
+The next case is about a specific institution that's been wrestling with privacy-vs-accountability for centuries — and where ZK might actually unlock honest design for the first time. Voting.
+
+## Codex Card
+
+> **Privacy-preserving identity**
+> ZK proofs let you prove specific properties about yourself, derived from real credentials, while revealing nothing else about your identity.
+> *Why it matters: it collapses the ID-or-anonymity binary that's broken every digital identity system to date.*
+
+## Code (optional)
+
+```rust
+// A simplified Noir circuit: prove I'm over 18 from a signed government credential.
+// Inputs are private except `current_year`, which is public.
+
+use dep::std::ecdsa_secp256r1;
+
+fn main(
+    dob_year: Field,                      // private: my year of birth
+    full_credential_hash: Field,          // private: hash of full credential
+    issuer_signature: [u8; 64],           // private: signature by issuer
+    issuer_pubkey: pub [u8; 64],          // public: known government pubkey
+    current_year: pub Field,              // public: today's year
+) {
+    // 1. The credential was signed by the trusted issuer.
+    let valid = ecdsa_secp256r1::verify_signature(
+        issuer_pubkey,
+        issuer_signature,
+        full_credential_hash.to_bytes(),
+    );
+    assert(valid);
+
+    // 2. The credential's DOB year, derived from the credential, is consistent.
+    //    (In a real implementation, the credential structure is committed to the hash.)
+
+    // 3. The user is at least 18.
+    assert(current_year - dob_year >= 18);
+}
+```
+
+*Annotation: The circuit verifies (a) that the credential was issued by the right authority, and (b) that the date-of-birth field implies age ≥ 18. The proof reveals only the public inputs (the issuer's known public key and the current year). The credential's contents — name, exact birthday, photo, address — never leave the user's device. This is the shape of every ZK identity proof: take a richly-detailed signed credential, prove a single computable property of it, reveal nothing else.*

@@ -1,0 +1,206 @@
+---
+act: 5
+number: 19
+slug: "zkml-verifiable-ai"
+title: "ZKML & Verifiable AI"
+tagline: "Proving an AI model ran correctly — on data nobody saw — is becoming the missing layer between AI and the chain."
+estimatedMinutes: 9
+prerequisites: ["hidden-information-games"]
+codexCard:
+  concept: "Zero-knowledge machine learning (ZKML)"
+  oneLine: "ZK proofs let you verify that a specific AI model produced a specific output for a specific input — without revealing the model, the input, or both."
+  why: "It's the cryptographic layer that lets AI inference be auditable, private, and on-chain — three properties currently in tension."
+---
+
+## Hook
+
+*The setting changes again. Noiro is on a rooftop at night. Neon signs reflecting off wet streets below. The skyline is a cluster of advertising for AI-this and AI-that. He's leaning on the railing.*
+
+"This is Act V, kid. The projection cases. We've shown what Aztec can do. Now we look ahead. What's coming."
+
+*He points down at the city.*
+
+"The biggest force in computing right now isn't blockchain. It isn't even close. It's machine learning. Every conversation, every document, every economic decision is getting routed through models nobody can audit, owned by companies with their own incentives, running on data we hand them in plaintext."
+
+*He gestures at the haze of the skyline.*
+
+"And it's incompatible with on-chain logic, the way it's currently built. A smart contract can't call OpenAI. The chain can't verify that a model said what someone claims it said. The trust gap is huge — and people who don't know any better are about to wave it off."
+
+*He turns.*
+
+"Today's case is about closing the gap. Specifically: ZK proofs applied to machine learning. ZKML. And why every cryptographer I respect thinks it's the most important application of ZK to come, even bigger than payments."
+
+---
+
+## Beat 1 — The Trust Gap In Modern AI
+
+Pause and count the ways you currently have to trust the AI systems you use.
+
+When you send a prompt to ChatGPT, Claude, Gemini, or any large model:
+
+- **You trust** that the model name matches the model that ran. (You asked for GPT-5; did GPT-5 actually answer? Could've been a cheaper model the API silently swapped in.)
+- **You trust** that the system prompt was what you set, not modified server-side.
+- **You trust** that no one read your input. (Privacy policy aside, you have no cryptographic guarantee.)
+- **You trust** that the output you got is a real model output, not edited by a moderation layer or post-processing pipeline.
+- **You trust** that the inference happened on the input you provided, not on an altered version.
+
+For most casual uses, this trust is fine. Big companies have reputational incentives to honor it. But as AI moves into higher-stakes applications — medical diagnosis, legal analysis, financial decisions, content moderation, government services — "trust the company" stops scaling.
+
+A specific question that becomes urgent: **how does a smart contract on a public chain verify an AI model's output?**
+
+Today, it can't. There's no cryptographic primitive that lets a contract say, "if model M run on input I produces output O, then transfer X funds." So either the contract has to trust an oracle (which collapses the trust to a centralized service), or it has to do without AI at all.
+
+ZK proofs, applied to ML inference, close this gap.
+
+[INTERACTIVE: reveal] A list of "AI-uses-the-chain" scenarios, each annotated with the trust assumption it currently requires. (e.g.: "Insurance auto-pay based on claim severity — trusts the AI provider's report. ZKML alternative: chain verifies the model's output cryptographically.")
+
+---
+
+## Beat 2 — What ZKML Does
+
+ZKML — zero-knowledge machine learning — is the use of ZK proofs to attest to a machine learning model's execution. The general shape:
+
+- A prover runs the model on an input.
+- They produce a proof that the model produced output O when run on input I.
+- A verifier checks the proof in milliseconds.
+- Optionally, the input I, the output O, and/or the model M can be public or private.
+
+Three modes of privacy for ZKML, picked per use case:
+
+**1. Private input, public model.**
+The user has data they don't want to expose. The model is a known, public model. The user runs the model locally, generates a proof "this is the correct output of model M on some input I," and submits the proof + the output. Useful for: medical diagnosis where the user keeps their X-ray private, fraud detection where the user keeps their transaction history private, content moderation where the user proves their content is safe without revealing it.
+
+**2. Private model, public input.**
+The model owner has a proprietary model they don't want to release publicly. They run the model on a public input and prove the output is correct. Useful for: a service running its proprietary AI on public data while attesting to honest computation, a model marketplace where buyers verify the model's quality before purchase.
+
+**3. Private input, private model.**
+Both are hidden. The proof attests "some model from this approved set, run on some input from this approved set, produced this output." Useful for: privacy-preserving cloud inference, private data analytics on regulated datasets.
+
+[INTERACTIVE: simulator] User picks a use case (medical diagnosis, content moderation, AI marketplace, regulatory ML reporting). The simulator picks the appropriate privacy mode and shows what the prover does, what the verifier learns, and what stays hidden.
+
+---
+
+## Beat 3 — The Reality Check: Where ZKML Is Today
+
+ZKML is **earlier than ZK identity, payments, or DeFi.** It's worth being precise about its current state.
+
+**The state of the art (broadly):**
+
+- Small to medium-sized neural networks can be proven in ZK *today*, with proof times measured in seconds to minutes depending on model size and hardware.
+- Proof generation for large LLMs (GPT-4, Claude 4-class models, Llama 3 70B+) is **not yet practical** for end-to-end inference. Active research; performance improving quickly; the gap is narrowing year by year.
+- Specialized circuits for specific operations (matrix multiplication, attention, common activation functions) are advancing rapidly. Recent breakthroughs in proof systems specifically targeted at ML workloads (e.g. ZKsphere, EZKL, Modulus Labs' approach) have produced order-of-magnitude improvements over the past two years.
+- Hardware acceleration for ZK proving (specialized ASICs, GPU optimization) is expected to reduce proof times another order of magnitude over the next 24-36 months.
+
+**Practical near-term ZKML applications:**
+
+- Inference proofs for **small to medium ML models** (image classifiers, fraud detectors, recommendation engines).
+- Proof of **specific computations on a model's output** (e.g., "I ran inference and the result was above threshold T") — even if the full inference proof is too expensive, partial-property proofs are tractable.
+- Verifiable inference for **"distilled" models** — smaller surrogates of large models, fast to prove.
+- **Compliance proofs** — proving an AI service used a specific model version with specific safety properties, without revealing proprietary internals.
+
+**Long-term ZKML applications (5–10 years):**
+
+- Large-model inference proofs at production scale.
+- ZK-verifiable training (proving a model was trained on specific data with specific procedures).
+- Cross-model interoperability with cryptographic proofs of behavior.
+
+[INTERACTIVE: reveal] A timeline of ZKML milestones, from the first proof-of-concept circuits (~2020) to current best-known. Each entry: what was achieved, what couldn't yet be done, what was unlocked.
+
+---
+
+## Beat 4 — Why Aztec Specifically Matters For This
+
+ZKML can run anywhere — it's a cryptographic primitive, not chain-specific. But Aztec's design is particularly well-suited as a *deployment layer* for ZKML applications.
+
+**Native composability between privacy and proofs.** A ZKML application typically wants: private input from the user, a verifiable proof of model execution, a downstream on-chain action. Aztec's hybrid state model lets all three live in the same contract, the same transaction.
+
+**Persistent private inputs.** A user's medical records, financial history, or proprietary data can live as private state in their Aztec account. ZKML inferences can be triggered against this state without ever exposing it. Re-running inference doesn't require re-uploading the data each time.
+
+**Account-bound model attestations.** A user's account contract can require that downstream actions be authorized by specific ZKML attestations (e.g., "this transaction is only valid if a specific safety classifier returned 'safe' on its content"). The classifier runs locally, the proof is generated locally, the contract verifies the proof.
+
+**Composability with private DeFi.** A ZKML risk model can attest to a user's creditworthiness (privately) and feed that into a private lending position (privately). The whole flow stays confidential while remaining cryptographically verifiable.
+
+**Settlement on Ethereum.** Final ZKML proofs can be settled on the same L1 that hosts other major financial infrastructure, making ZKML-driven actions composable with the broader Ethereum ecosystem.
+
+[INTERACTIVE: side-by-side]
+**ZKML deployment models:**
+| Approach | Where the inference runs | Where the proof verifies | Privacy properties |
+|---|---|---|---|
+| Off-chain ZKML, L1 verifier | User's device | Smart contract on L1 | Input private; proof public |
+| ZKML in a generic L2 | User's device | L2 (zkSync, Polygon zkEVM) | Same as L1; no chain-native privacy |
+| **ZKML on Aztec** | **User's device** | **Aztec contract** | **Input + downstream action both private** |
+
+The third model is uniquely Aztec's. Other chains can verify a proof but can't natively chain that verification to private downstream state. Aztec can.
+
+---
+
+## Beat 5 — Speculative But Plausible: A 2030 Picture
+
+Picture a moment, five-ish years out:
+
+A user wakes up in the morning. Their phone runs a personal AI model — locally — that has been fine-tuned on their own private journals, communications, schedule, and preferences. The model never leaves their phone. None of their data ever leaves their phone.
+
+When they interact with online services, the model produces ZK-attested outputs:
+
+- "This is a verified summary of the article I just read; I want to engage with this comment thread." → Identity-attached, privacy-preserved.
+- "Based on my private financial history, my creditworthiness for this loan is X." → Lender verifies the attested output without ever seeing the underlying data.
+- "Based on my private medical history, I need an appointment for Y type of specialist; here is a triage-grade priority indicator." → Healthcare system uses the attested output for routing, without seeing the medical data.
+- "Based on my political views and current event interest, here are five articles I should read today; the recommendation is mine; the ad-targeting model didn't see my data." → Content choice attested, surveillance-free.
+
+Each of these is a ZKML proof. Each runs locally on the user's hardware. Each is verifiable on-chain (or off-chain, depending on the use case). None of them require the user to surrender their data to a centralized provider.
+
+Is this the only future? No. There are also worlds where the trend continues toward centralized AI as a service, with users handing more and more data to provider companies. There are worlds where ZKML matures more slowly than alternative trust models (TEEs, FHE, MPC). The future is genuinely uncertain.
+
+What's *not* uncertain: **the cryptographic primitives to build the ZKML version of this future are working, deployable, and improving fast.** The bottleneck is not "is it mathematically possible." The bottleneck is engineering, ecosystem, and cultural adoption — and those are the kinds of bottlenecks that 5-10 years of focused work can credibly close.
+
+---
+
+## Reveal
+
+ZKML is the cryptographic layer that makes AI **auditable, private, and chain-compatible at the same time** — three properties that today are in tension and resolved (badly) by trusting providers.
+
+Aztec is well-positioned to be one of the major deployment layers for ZKML applications: hybrid state, persistent private inputs, account-bound attestations, settlement on Ethereum.
+
+We're in the early innings. ZKML for large models is not yet practical. ZKML for small to medium models is shipping. The trajectory is unambiguous: every year, a larger fraction of the AI stack moves from "trust the provider" to "verify the proof."
+
+If the bet pays off, the world looks meaningfully different in 2030 than it does today. Privacy-preserving personal AI agents become the default user-experience layer. AI-driven decisions become contestable in court because the inference is verifiable. The on-chain world stops being a sideshow to the AI conversation and becomes its primary trust infrastructure.
+
+If the bet doesn't pay off, ZKML stays niche, and the AI-trust problem gets solved differently — by more centralization, by hardware enclaves, by regulatory regimes that prescribe specific providers.
+
+Both futures are coherent. The architectural piece Aztec provides — *a chain where ZK-verified computation, private user state, and on-chain settlement compose natively* — is one of the assets that makes the first future buildable.
+
+The next investigation steps further out and asks the broader question: what does a privacy-by-default web look like, on the assumption that ZK does mature and compose?
+
+## Codex Card
+
+> **Zero-knowledge machine learning (ZKML)**
+> ZK proofs let you verify that a specific AI model produced a specific output for a specific input — without revealing the model, the input, or both.
+> *Why it matters: it's the cryptographic layer that lets AI inference be auditable, private, and on-chain — three properties currently in tension.*
+
+## Code (optional)
+
+```rust
+// Conceptual shape of a ZKML proof, in pseudo-Noir.
+// A user proves: "Running model M on my private input X produces public output Y."
+
+contract MedicalTriageML {
+    public model_root: Field;                  // Merkle commitment to the model weights
+
+    private fn get_triage(
+        patient_record: PatientRecord,         // private
+        model_weights: ModelWeights,           // private (verified against model_root)
+        public severity_score: pub Field,      // public output
+    ) {
+        // 1. Verify the model weights match the publicly-committed model
+        assert(commit_model(model_weights) == model_root);
+
+        // 2. Run the model
+        let predicted_severity = run_neural_network(model_weights, patient_record);
+
+        // 3. Bind the output
+        assert(predicted_severity == severity_score);
+    }
+}
+```
+
+*Annotation: The patient's record never leaves their device. The model is publicly committed (the chain knows which model ran), but the weights themselves can be private if the model is proprietary. The output — a severity score — is public, and the chain has cryptographic assurance that "the publicly-committed model, run on the user's private input, produced exactly this score." Downstream actions (triage routing, insurance claims) can be conditioned on this score without anyone ever seeing the patient record.*

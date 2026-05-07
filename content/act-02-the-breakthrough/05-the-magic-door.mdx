@@ -1,0 +1,189 @@
+---
+act: 2
+number: 5
+slug: "the-magic-door"
+title: "The Magic Door"
+tagline: "Prove a thing is true — without revealing why it's true. Yes, it's possible. No, it's not magic."
+estimatedMinutes: 9
+prerequisites: ["the-compliance-trap"]
+codexCard:
+  concept: "Zero-knowledge proofs (the intuition)"
+  oneLine: "A way to convince someone that a statement is true while revealing nothing else about it."
+  why: "Once you accept it's possible, the entire shape of on-chain privacy becomes obvious."
+---
+
+## Hook
+
+*The setting changes. The grimy office is gone. Noiro is in a quiet, candlelit study — wood-paneled, ancient books, a single lamp.*
+
+"Welcome to Act II, kid. Different city. Different mood. Same case."
+
+*He sits across from you in a leather chair.*
+
+"In Act I, you saw the problem. The chain leaks. Bolted-on cloaks tear. The system charges a tax for the privilege of being watched. Politicians say privacy and compliance can't both exist; we showed them the door."
+
+*He nods at the window. Outside, the night is clear.*
+
+"For the next four cases, we don't talk about what's broken. We talk about what changed. Specifically — one piece of mathematics, invented in 1985, that nobody outside cryptography labs cared about for thirty years, and that quietly became the most important breakthrough in computing of the 2020s."
+
+*He smiles, slightly.*
+
+"It's called a **zero-knowledge proof**. And before today, you were going to assume it was impossible. Tonight I'm going to convince you it's not."
+
+---
+
+## Beat 1 — A Conversation You've Never Had
+
+Imagine I tell you something is true. Maybe: *"I know the password to your front door."*
+
+How would you check?
+
+You could ask me to **show** you the password. I type it in. The door opens. Now you know I knew it. But now I've also told you the password, and you've seen what I know.
+
+That's how every "proof" you've ever encountered works. To convince someone of a fact, you reveal the fact (or evidence of it). The proof and the underlying knowledge come together. They are not separable.
+
+A **zero-knowledge proof** is exactly that: a proof that's separated from the knowledge. You walk away convinced the password works. I walk away with the password still secret. *Nothing I told you in the process could let you, or any observer, learn the password yourself.*
+
+If that sounds impossible, congratulations. Every cryptographer you've ever met spent their first day in this field thinking exactly the same thing.
+
+[INTERACTIVE: reveal] A short series of "puzzle questions" the user thinks through before the answer is revealed. *Q1: I claim this Sudoku is solvable. Can I prove it without telling you the solution? Q2: I claim this graph can be 3-colored. Can I prove it without showing the coloring? Q3: I claim I'm over 18 without telling you my birthday. Each question seems impossible at first glance — until the structural answer is revealed in the next beat.*
+
+---
+
+## Beat 2 — The Cave (Or: Why It Actually Works)
+
+The classic intuition pump is a cave. Every cryptographer who teaches this uses some version of it. So we'll use it too.
+
+Picture a cave with a single entrance. Inside, the path splits into two corridors — left and right. Deep in the cave, the two corridors are connected by a magic door that can only be opened by someone who knows a secret password.
+
+I claim I know the password. You don't believe me. We need a way for me to prove it to you, without telling you what it is.
+
+Here's the protocol:
+
+1. I go into the cave first. You wait outside, so you don't see which corridor I take. I randomly pick left or right.
+
+2. You then come to the entrance and shout: "Come out the **right** corridor."
+
+3. If I'm in the right corridor already, I just walk out. If I'm in the left one, I need to use the magic door to cross over — which requires the password.
+
+4. If I knew the password, I can always satisfy your demand, no matter which side you call.
+5. If I didn't know the password, I'd succeed only if my random guess happened to match yours — that's a 50% chance.
+
+After one round, you've got 50/50 confidence. After two rounds, 75%. After ten rounds, 99.9%. After twenty, the chance I'm faking is one in a million.
+
+[INTERACTIVE: simulator] The user plays the verifier. They run the protocol round by round, watching the probability that "this person is faking" shrink toward zero. After 20 rounds, the simulator declares: *"You are now 99.9999% confident this person knows the password. You still have no idea what the password is."*
+
+That's the heart of zero-knowledge:
+
+- **Soundness:** if the prover is lying, they will fail. (They can't keep guessing right forever.)
+- **Completeness:** if the prover is honest, they will succeed.
+- **Zero knowledge:** the verifier learns *only* whether the claim was true. Not why.
+
+---
+
+## Beat 3 — From Caves To Computers
+
+The cave story is a real protocol — formally introduced by Shafi Goldwasser, Silvio Micali, and Charles Rackoff in 1985. (It won them the Turing Award. Eventually.)
+
+The cryptography community spent the next thirty years figuring out how to do the same thing **for arbitrary mathematical statements**, not just "I know the password."
+
+By the 2010s, the answer arrived: **you can encode any computational claim — any program with any inputs and outputs — as a zero-knowledge proof.**
+
+In plain English, this means: I can give you a small file (the proof) that convinces you of any of the following, without revealing anything else:
+
+- "I know a private key whose corresponding public key is *X*."
+- "I have a balance of at least 100 USDC in this account I control."
+- "I executed this entire smart contract correctly, with these public outputs and these hidden inputs."
+- "I am over 18, a citizen of country *X*, and not on sanctions list *Y* — and I prove it from a single government-issued credential I'm not showing you."
+- "I correctly computed the output of an entire machine-learning model, on an input I'm not revealing, and the output is *Z*."
+
+Each of these statements becomes a small cryptographic proof. The verifier checks the proof in milliseconds. The verifier learns nothing beyond the truth of the statement.
+
+[INTERACTIVE: side-by-side]
+**The shape of a ZK proof in practice:**
+| What the prover has | What the prover sends | What the verifier learns |
+|---|---|---|
+| A secret (`witness`) | A short proof (`π`) | Yes/no on the claim |
+| A program / circuit | + the public inputs/outputs | *Nothing else.* |
+
+The proof itself is typically a few hundred bytes to a few kilobytes — small enough to fit in a transaction, post on a blockchain, ship over the internet.
+
+---
+
+## Beat 4 — Why This Solves Act I
+
+Now look back at the four cases we just finished.
+
+- **The Glass House:** the chain reveals everything. With ZK, a contract can validate a state change *without revealing the state*. The chain learns "the rules were obeyed." It does not learn *what happened*.
+- **The Failed Cloak:** mixers were ZK proofs glued onto a transparent chain. Better: bake ZK proofs into the chain itself, and the cloak is no longer a separate, sanctionable utility. It's the entire fabric.
+- **The Surveillance Premium:** front-running and MEV require reading the user's intent. With ZK, intent is encrypted; verification is local; the chain only sees a proof that "this trade was valid under the rules."
+- **The Compliance Trap:** the political objection collapsed because of *exactly this technology*. Selective disclosure is just a ZK proof of a particular kind ("I prove I am compliant under rule X without revealing my data").
+
+Every problem in Act I has the same shape: **the chain reveals more than it needs to, in order to verify what it cares about.** ZK proofs collapse that gap. They let the chain verify *only* what it cares about, and reveal *only* what is necessary.
+
+This is not metaphor. This is mathematics. The proofs are produced by software, verified by software, settled in transactions that look — to a chain analyst — like noise.
+
+*Noiro reaches for a bottle of something amber on the side table. Pours two small glasses.*
+
+"That's the cracked-open door, kid. Took thirty years to build the hinges. But here we are."
+
+---
+
+## Beat 5 — The Cost (Honest Version)
+
+Nothing real comes free, and zero-knowledge proofs aren't an exception.
+
+The honest tradeoffs:
+
+- **Generating a proof is expensive.** It can take milliseconds for trivial statements, seconds for moderate ones, and minutes (with a lot of hardware) for very complex ones. This is the prover cost. It's been dropping fast — proofs are roughly an order of magnitude cheaper to generate than they were five years ago — but it remains the dominant cost in the ZK pipeline.
+- **Verifying a proof is cheap.** This asymmetry is the magic of the system. A complex computation that took the prover seconds is verified by anyone in milliseconds. That's what makes blockchain-scale verification practical.
+- **The cryptography is young.** "ZK" covers a family of techniques (SNARKs, STARKs, Bulletproofs, lookup arguments), each with different security assumptions, hardware requirements, and performance profiles. The field is moving fast. The shape of "what's standard" in 2030 may be different from what's standard today.
+- **Trusted setup, in some flavors.** Some ZK systems require a one-time ceremony where multiple parties together generate setup parameters; if all of them collude, security can be compromised. Other systems avoid this entirely. We'll touch on the distinction in the next investigation.
+
+[INTERACTIVE: reveal] Four cards labeled *prover cost, verifier cost, cryptographic maturity, trusted setup.* Clicking each gives a short paragraph of honest accounting.
+
+These costs are real. They are also, with few exceptions, **engineering problems** — being chipped away at by a global research community that has more momentum behind it now than at any prior moment in the field's history.
+
+---
+
+## Reveal
+
+The single most important takeaway, before we go any deeper:
+
+**A zero-knowledge proof is a small piece of cryptographic data that convinces a verifier of a statement, without revealing any of the underlying information used to construct it.**
+
+Once you accept that this is possible — and that it's not magic, but mathematics with formal proofs of security — every architectural question about on-chain privacy has the same answer:
+
+> *Use a ZK proof to verify what the chain needs to verify. Hide everything else.*
+
+That's the whole shape of the next three investigations of Act II (we'll tighten the cryptographic story), all of Act III (we'll see how Aztec implements this in a real chain with a real language called Noir), and Act IV (we'll see what becomes possible).
+
+But you don't need to know the cryptography to understand the consequence. You just need to know the door is open.
+
+*Noiro finishes his drink. Sets the glass down on a coaster shaped like a five-pointed star.*
+
+"Tomorrow, we figure out how big the door is. Three letters that turned this from a curiosity into an industry. **S-N-A-R-K.**"
+
+## Codex Card
+
+> **Zero-knowledge proofs (the intuition)**
+> A way to convince someone that a statement is true while revealing nothing else about it.
+> *Why it matters: once you accept it's possible, the entire shape of on-chain privacy becomes obvious.*
+
+## Code (optional)
+
+```rust
+// A glimpse of what a ZK statement looks like, in Noir.
+// (No need to read the syntax — read the comment.)
+//
+// The function takes a private input `password` and a public input `hash`.
+// It proves: "I know a value whose hash matches the public hash" — without
+// ever revealing the password itself.
+
+fn main(password: Field, hash: pub Field) {
+    let computed = std::hash::pedersen([password]);
+    assert(computed[0] == hash);
+}
+```
+
+*Annotation: When this circuit is run, the prover provides their password (privately) and the expected hash (publicly). The proof produced says, in mathematical terms, "I know an input that hashes to the public value." A verifier checks the proof — which contains no information about the password itself — and is convinced. This is the simplest possible ZK pattern. The rest of the Codex shows what it scales to.*

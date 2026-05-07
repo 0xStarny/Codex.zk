@@ -1,0 +1,187 @@
+---
+act: 1
+number: 3
+slug: "the-surveillance-premium"
+title: "The Surveillance Premium"
+tagline: "On a transparent chain, everyone is watching everyone — and watching costs you money."
+estimatedMinutes: 8
+prerequisites: ["the-glass-house", "the-failed-cloak"]
+codexCard:
+  concept: "The surveillance premium"
+  oneLine: "Transparency turns every transaction into actionable intelligence — and turns that intelligence against you."
+  why: "It shows that privacy isn't only personal — it's an economic primitive."
+---
+
+## Hook
+
+*Noiro slides a thin printout across the desk. A single number is circled in red.*
+
+"Tell me what this is, kid."
+
+*The number reads: **$1,840,000,000**.*
+
+"Educated guess: someone's bank account. A small country's tax bill. Whatever."
+
+*Noiro shakes his head once.*
+
+"That's the cumulative tax that one specific group of bots has extracted from regular Ethereum users in a single year. By doing nothing more clever than reading the chain you can also read."
+
+*He taps the page.*
+
+"Privacy isn't just about feeling watched, kid. On a transparent chain, surveillance becomes an industry. And the bill lands in your wallet whether you noticed it or not."
+
+---
+
+## Beat 1 — The Mempool: A Window Into The Future
+
+To understand the cost of transparency, you have to understand a thing called the **mempool**.
+
+When you make a transaction on Ethereum — a swap, a transfer, an NFT mint — that transaction doesn't go straight into a block. It first gets broadcast across the network and waits in a holding area called the mempool. Block builders watch the mempool, pick which transactions to include in the next block, and order them.
+
+The mempool is, by design, **public**. Every node operator can see every pending transaction in there. That includes the addresses involved, the amounts, the contract being called, and — critically — the gas price the user is willing to pay.
+
+[INTERACTIVE: animation] A flowing river of pending transactions. The user can pause it and click on any single one to see exactly what information is exposed: sender, receiver, intent (`swap 5 ETH for USDC on Uniswap`), gas willingness. A label appears: **"Currently visible to: every node, every searcher, every block builder."**
+
+For a normal transaction (sending 50 USDC to a friend), this exposure is mostly harmless. For anything involving **price-sensitive activity** — DEX trades, liquidations, NFT mints, governance votes — the mempool is a goldmine for whoever's reading it.
+
+---
+
+## Beat 2 — Front-Running, In Plain English
+
+Here's the simplest version.
+
+You see a token you want to buy. The current price on Uniswap is $1.00. You go to swap, and your transaction enters the mempool.
+
+A bot, watching the mempool, notices your trade. It calculates: *if this person buys, the price will move up to $1.02. If I buy first, I can buy at $1.00 and sell to them at $1.02.* The bot copies your trade, sets a higher gas price so the block builder includes its transaction first, and pockets the difference.
+
+Your trade still goes through. You just paid more than you would have if no one had been watching.
+
+This is **front-running**, and it happens on Ethereum thousands of times per day.
+
+The variants get worse:
+
+- **Sandwich attack**: a bot buys before you (driving the price up), lets your trade execute (at the inflated price), then sells after you (capturing the spread). You pay both ways.
+- **Liquidation sniping**: in lending protocols, when a user's loan becomes liquidatable, bots race to be the one who closes it — sometimes paying enormous gas fees just to win the race. The user being liquidated takes a worse deal than they would have in a less adversarial market.
+- **Oracle front-running**: bots watch oracle update transactions and trade ahead of the price change.
+- **NFT mint sniping**: bots scrape the contract code, predict which NFTs will be rare, and snipe them at mint.
+
+[INTERACTIVE: simulator] The user picks a trade size. The simulator runs three scenarios:
+- **(a)** No bots — the user gets the quoted price.
+- **(b)** One front-runner — the user pays a small premium.
+- **(c)** Active sandwich — the user pays a noticeable premium and the bot extracts the spread.
+The simulator shows real-world example numbers (without dollar amounts, since prices change — only ratios and percentages).
+
+---
+
+## Beat 3 — Naming The Beast: MEV
+
+This whole category of activity has a name in the industry: **Maximal Extractable Value**, or **MEV**.
+
+The term is intentionally neutral. MEV is value that block builders and bots can extract from the network by *reordering, including, or excluding* transactions in a block. Some MEV is benign (or even helpful) — for example, an arbitrage bot equalizing the price of an asset across two DEXs is a kind of market-making service. Some MEV is a tax on every other user.
+
+The total amount of value extracted via MEV on Ethereum, since the chain's launch, runs into the **billions of dollars**. Not theoretical. Measured, on-chain, paid by real users.
+
+*Noiro lights a cigarette.*
+
+"That's the surveillance premium, kid. Every trade you make on a transparent chain is broadcast to a swarm of bots before it executes. Some of those bots are going to take a bite. The chain didn't make them rich. The chain just made you legible."
+
+[INTERACTIVE: side-by-side]
+**MEV in numbers (illustrative — orders of magnitude):**
+| Year | Estimated MEV extracted | Primary categories |
+|---|---|---|
+| 2020 | Tens of millions | Arbitrage, liquidations |
+| 2021 | Several hundred million | Sandwich attacks, NFT sniping |
+| 2022 | Over $1 billion (post-Merge) | Reorganized via builders |
+| Today | Continues at scale | Distributed across rollups |
+
+Order-of-magnitude only. The point isn't a precise figure — the point is that this is a large, persistent line item on every public chain.
+
+---
+
+## Beat 4 — Beyond Trading: Surveillance As Strategy
+
+Front-running is the headline form. The deeper effect of a transparent mempool — and a transparent chain — is **strategic information leakage**.
+
+Consider:
+
+- **A DAO is about to vote on a proposal.** The voting transaction is broadcast. Whales watch. They counter-vote. They use the gap between proposal and execution to short-buy tokens or governance positions, knowing the outcome before it's final.
+- **A lending protocol is testing a new feature.** The deployment transaction is public. Competitors fork it within hours. The first-mover advantage is gone before the protocol's own users have noticed.
+- **A treasury is going to rebalance.** The transactions are predictable. Bots position themselves to extract from the rebalance.
+- **A user is going to claim an airdrop.** Their address is now linked to receipt of that token. Phishing attacks and tax authorities both find them.
+
+Every one of these is a cost. Some land directly in users' wallets (front-running, sandwich attacks). Some land more diffusely (slower innovation, defensive positioning, copycat exploitation, leaked strategy). All of them stem from the same root: **everything you do is broadcast, in real time, to anyone who cares to look**.
+
+In traditional finance, this kind of leakage is a felony. It's called *front-running* or *insider trading*, and it's prosecuted. On a transparent blockchain, the same activity is just **reading the chain**. It's not even illegal. It's the chain working as designed.
+
+---
+
+## Beat 5 — "But MEV Has Solutions, Right?"
+
+It does. And they're a useful warning.
+
+The current generation of MEV mitigations on Ethereum and its rollups falls into a few categories:
+
+- **Private mempools** (e.g. Flashbots Protect, MEV-Blocker): you submit your transaction to a trusted relay that doesn't expose it publicly until block inclusion. It works, partially. But you're now *trusting an off-chain operator* to behave honestly.
+- **Encrypted mempools** (research stage): mempool transactions are encrypted until block inclusion. Better, but adds complexity, latency, and design tradeoffs around fairness.
+- **Order-fair sequencing**: protocols try to enforce a fair order. Hard problem; partial solutions; trust assumptions creep back in.
+- **Application-level guards**: dApps add slippage protection, commit-reveal schemes, batch auctions. Helps for specific cases, not as a general fix.
+
+[INTERACTIVE: reveal] Six MEV mitigation cards. The user clicks each to learn (a) what it does, (b) what it costs in tradeoffs, (c) why it's still partial.
+
+The pattern, again: every solution is **a workaround for a chain that exposes too much by default**. Each one is a layer of trust, latency, or complexity that wouldn't be needed if the underlying transactions weren't legible to begin with.
+
+This is the same shape as Act I, Investigation 2. The mixer story repeated. We're patching transparency, not solving it.
+
+---
+
+## Reveal
+
+The cost of a transparent chain isn't just emotional or political. It is **economic, measurable, and recurring**:
+
+- **Front-running and sandwich attacks** extract value from every retail trade.
+- **MEV** has become a billion-dollar-per-year industry, the bulk of which is paid by users who never knew it existed.
+- **Strategic leakage** silently undermines DAO governance, protocol launches, treasury management, and competitive innovation.
+
+This is the **surveillance premium**: the price every user of a transparent chain pays, every time they transact, for the privilege of being watched.
+
+A chain where transactions are private by default doesn't eliminate MEV — but it changes the game radically. You can't front-run a transaction whose intent you cannot read. You can't sandwich a swap whose direction is hidden. You can't snipe a vote whose outcome isn't broadcast in advance.
+
+Privacy isn't only a personal good. It is a **structural defense against extractive economics**.
+
+That's the case for Investigation 3. One more case in this Act, and then we leave the rain behind.
+
+## Codex Card
+
+> **The surveillance premium**
+> Transparency turns every transaction into actionable intelligence — and turns that intelligence against you.
+> *Why it matters: it shows privacy isn't only personal — it's an economic primitive.*
+
+## Code (optional)
+
+```javascript
+// What an MEV bot's job looks like, in pseudocode.
+// All of these inputs are public on Ethereum.
+
+mempool.on("pendingTx", async (tx) => {
+  const decoded = decodeSwap(tx);                        // ← visible: target DEX, tokens, amounts
+  if (!decoded) return;
+
+  const profit = simulateSandwich({
+    victim: decoded,
+    frontrunSize: estimateOptimalFrontrun(decoded),
+  });
+
+  if (profit > gasCost(currentGasPrice)) {
+    sendBundle({
+      txs: [
+        buildFrontrunTx(decoded),                        // ← bot buys before victim
+        tx,                                              // ← victim's tx
+        buildBackrunTx(decoded),                         // ← bot sells after victim
+      ],
+      gasPrice: currentGasPrice * 1.05,                  // ← outbid the rest
+    });
+  }
+});
+```
+
+*Annotation: This isn't a hack. It isn't an exploit. It's an honest, lawful program reading public data and submitting public transactions. The chain rewards it. The user pays for it. None of this works on a chain where the victim's transaction intent is encrypted — which is what the rest of this Codex is leading toward.*

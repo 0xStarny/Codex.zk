@@ -1,0 +1,199 @@
+---
+act: 5
+number: 22
+slug: "open-questions"
+title: "Open Questions"
+tagline: "What's still genuinely unresolved — about the cryptography, the regulation, the markets, and the future."
+estimatedMinutes: 10
+prerequisites: ["the-selective-disclosure-economy"]
+codexCard:
+  concept: "The honest unknowns"
+  oneLine: "Aztec, ZK, and the privacy-by-default vision face real open questions — and naming them honestly is the only way to actually answer them."
+  why: "It closes the Codex on intellectual honesty rather than triumphalism, leaving readers equipped to follow the conversation."
+---
+
+## Hook
+
+*Noiro is at the top of the central pyramid. The view is wide. Below: the city, the temples, the rooftop, the bank lobby, the town hall, the rooftop again — all the cases we've worked, laid out like a map.*
+
+"Last case, kid."
+
+*He sits on a stone bench. Doesn't light a cigarette this time.*
+
+"Twenty-one cases, you've heard the affirmative. Why privacy matters, why ZK works, why Aztec made the right structural choices, why this could reshape industries. And I believe most of it — that's why I took the job. But anyone who tells you a technology this consequential has no open questions is selling something."
+
+*He looks out over the map.*
+
+"This last case is what I'd want to know if I were you. The honest list of things still unresolved. Some are technical. Some are political. Some are commercial. None of them break the case for Aztec — but each one is real. And reading the next five to ten years correctly means tracking how each one moves."
+
+---
+
+## Beat 1 — Cryptographic Open Questions
+
+The cryptography that powers Aztec is mature enough to ship. It is **not** "done." A short list of what's still being worked on:
+
+**Prover performance.** Generating a ZK proof on a typical user device is, today, in the seconds-to-minutes range for serious computations. For most use cases, fine. For highly interactive applications (real-time DeFi UX, fast-twitch games, complex on-the-fly identity proofs), it's still uncomfortably slow. The trajectory is good — order-of-magnitude improvements every couple of years — but consumer devices doing real-time complex ZK proving is not a 2026 reality. It's a 2028-2030 likelihood.
+
+**Hardware acceleration.** Specialized ZK proving hardware (GPUs adapted for ZK math, ASICs purpose-built for proving) is in early production. The performance gains are real. The broad availability and price-performance is still maturing. This is a 2-5 year story.
+
+**Post-quantum security.** Many current SNARK constructions rely on cryptographic assumptions (specifically, the discrete logarithm problem on elliptic curves) that are vulnerable to sufficiently capable quantum computers. STARKs are post-quantum-secure today; SNARK families are migrating, with mature post-quantum SNARK constructions emerging. Whether quantum computers capable of breaking pre-quantum SNARKs arrive in 5 years, 15 years, or never is itself uncertain. Aztec, like every other system using SNARKs, will need to migrate the underlying proving system on a slow but inevitable timeline.
+
+**Trusted setup ceremonies.** Some SNARK families still require trusted setup. Multi-party ceremonies of thousands of participants make this practical (only one participant needs to be honest), but it's a structural awkwardness. The migration to setup-free proving systems (Halo2, STARKs, more) is ongoing.
+
+**Cryptographic auditing maturity.** ZK protocol implementations are notoriously easy to get subtly wrong. Bugs that don't affect correctness can affect soundness — meaning a buggy circuit might let provers create false proofs without anyone noticing until exploited. Auditing is improving (formal verification, automated tools, growing pool of expert reviewers), but a major exploit due to a subtle ZK bug is, statistically, going to happen at some point in the next decade.
+
+[INTERACTIVE: reveal] Five cryptography open-question cards. Each shows: the issue, the current best understanding, the expected resolution timeline, what an early signal of trouble would look like.
+
+---
+
+## Beat 2 — Regulatory Open Questions
+
+The legal and regulatory positioning of privacy-preserving on-chain technology is **the** category most likely to determine adoption trajectory over the next decade.
+
+Real, unresolved questions:
+
+**Sanctioning protocols.** Tornado Cash showed that a sanctioning regime can target specific smart contracts. Whether — and under what conditions — privacy-preserving infrastructure with selective-disclosure capabilities can be sanctioned is genuinely unsettled. Different jurisdictions are converging at different rates. Court cases are still being decided.
+
+**Auditor key requirements.** Several jurisdictions have proposed or are considering rules requiring privacy-preserving systems to support some form of authority access. The specific shape varies wildly: some want preemptive auditor keys held by regulators; some want post-hoc unsealing under court order; some treat this as an application-level concern, not a chain-level one. The ecosystem hasn't settled, and **this question may not have a single answer** — different jurisdictions may converge on different models.
+
+**Travel rule and KYC for crypto.** FATF's "travel rule" and adjacent AML requirements have been hard to apply to public-chain transactions; they're harder to apply to private-chain transactions. Selective-disclosure compliance frameworks (Investigation 17) are the technical answer, but the regulatory acceptance is still being built. Pilots are underway. Mass adoption is multi-year.
+
+**MiCA and similar comprehensive frameworks.** The EU's MiCA regulation, the UK's emerging crypto regime, US state-level frameworks — all are setting rules that will determine how privacy-preserving crypto operates in regulated markets. Some rules are favorable to privacy infrastructure; some are hostile; some are unclear. The next 3-5 years see a lot of these get nailed down.
+
+**International coordination.** Privacy-preserving compliance frameworks work best when adopted internationally. The current state is fragmentation. The trajectory is slow convergence — but slow.
+
+[INTERACTIVE: reveal] Five regulatory questions. Each card has: the question, the current state across major jurisdictions, the most-likely-trajectory scenario, the worst-case scenario.
+
+---
+
+## Beat 3 — Commercial Open Questions
+
+Even if the cryptography matures and the regulation cooperates, commercial adoption isn't automatic. Specific concerns:
+
+**Will users actually want privacy enough to switch?** A surprisingly large fraction of users today don't seem to highly prioritize privacy. They know their data is being collected; they continue. Will the same dynamic apply to on-chain privacy? Or is the "user resignation" pattern specific to Web2's particular history of broken promises, and on-chain users will behave differently? Genuine question. Empirical evidence is mixed.
+
+**Network effects and chicken-and-egg.** Aztec is more useful as more applications, users, and integrations live on it. Achieving the critical mass of liquidity, dApps, oracles, and tools is non-trivial. The classical L2 launch pattern (incentives, partnerships, community programs) is being deployed; whether it's enough to outcompete attention from already-large ZK rollups (zkSync, etc.) is uncertain.
+
+**Developer experience.** Writing privacy-correct contracts in Noir is harder than writing public contracts in Solidity. The mental model is more complex. Tooling is younger. The pool of experienced Aztec developers is small (because the ecosystem is young), so projects building on Aztec face hiring friction. This will improve as the ecosystem matures, but it's a real near-term cost.
+
+**Bridge UX.** Moving assets between Aztec (private state) and Ethereum (public state) is more complex than moving between two transparent chains. The user has to think about "shielding" and "unshielding" in ways they don't on a Polygon-to-Arbitrum bridge. Wallet design is making this better. It's not yet invisible.
+
+**Institutional onboarding.** Institutional users (banks, asset managers, corporates) require operational onboarding that takes years (compliance review, internal risk assessment, legal sign-off, integration with existing systems). Aztec's institutional pipeline is real but slow.
+
+[INTERACTIVE: reveal] Five commercial-adoption questions. Each card has: the question, the relevant precedents from prior crypto cycles, the indicators to watch, the realistic best/worst case for the next 24 months.
+
+---
+
+## Beat 4 — Philosophical And Political Open Questions
+
+Some questions go deeper than adoption mechanics. Worth naming honestly.
+
+**Is privacy a human right or a regulatory choice?**
+Different jurisdictions, different traditions, give different answers. Privacy advocates frame it as a fundamental right grounded in dignity and autonomy. Some governments frame it as a regulatory permission revocable for legitimate state interests. The deployment of privacy infrastructure tests these framings empirically. **Whichever framing wins this argument over the next decade meaningfully shapes the global privacy landscape.** Aztec doesn't resolve the question; it makes one specific deployment of privacy real, which feeds into the empirical record.
+
+**Will privacy become fashionable or remain niche?**
+The user demand for privacy has historically been latent — present, but not the top decision factor for most users at point of choice. Several scenarios could change this:
+- Major breach (a cataclysmic data exposure that radicalizes users about disclosure)
+- Concrete personal harms (people getting fired, divorced, prosecuted, or hassled because of public on-chain data, building a folk awareness)
+- Cultural shift (privacy becomes signaled like sustainability or open-source contribution)
+- Regulatory mandate (laws making private-by-default the legal floor)
+None of these are certain. All are possible.
+
+**Compliance vs. abolition.**
+There's an honest split inside the privacy-cryptography community between those who want to make privacy infrastructure compatible with existing regulatory regimes (Aztec's broader bet) and those who view any compliance integration as a betrayal of privacy's first principles. Both camps have substantive arguments. The bet behind Aztec is that compliant-but-private wins, because it's the bet that gets adopted at scale. The pure-privacy camp argues that any compliance integration is a slippery slope to backdoors. Time will tell.
+
+**Centralization of credential issuance.**
+Selective-disclosure systems delegate trust to credential issuers (governments, banks, professional bodies). This trust is qualitatively different from "trusting a centralized service with your data" — but it's not zero. If the same handful of issuers dominate (as has happened in OAuth-based identity), the credential layer becomes a centralization point. The technical primitives don't prevent this; only the deployment patterns can.
+
+[INTERACTIVE: reveal] Four philosophical questions. Each card poses the question, summarizes the substantive views on either side, and identifies what evidence over the next 5 years would tilt the answer.
+
+---
+
+## Beat 5 — What We're Confident About
+
+After four beats of "things we don't know," it's worth ending on the things we *are* confident about.
+
+**The cryptography is real and shipping.** Zero-knowledge proofs at production scale are not 2030's promise; they're 2025's reality. The trajectory of improvement is established. Major chains are in production using these primitives daily.
+
+**The structural shift toward privacy-by-default is happening, slowly.** Across regulations, browser policies, encrypted messaging, decentralized identity, and ZK chains, the default is moving. The shift is incomplete and uneven. The direction is unambiguous.
+
+**Aztec's specific design — hybrid state, native AA, Noir as a portable language — is coherent and well-executed.** Reasonable people can debate whether the bet pays off. It's hard to look at the architecture and conclude the team made bad calls. The choices add up. The chain delivers the architectural distinctives it claims.
+
+**The application categories are real.** Private DeFi, ZK identity, private voting, compliance-without-surveillance, hidden-information games — every one of these has working prototypes, demos, or production deployments. The unanswered question isn't "do these work?" — it's "how big does each become?"
+
+**Aztec is not the only platform.** Other ZK chains (Aleo, Mina), other privacy primitives (TEEs, FHE, MPC for off-chain use), other layers (browser-native ZK, mobile-native ZK) are all in motion. A privacy-by-default world is multi-platform. Aztec is one credibly-distinctive platform within it.
+
+The honest position: **the case for ZK-based programmable privacy is strong; the case for Aztec specifically is sound but not unique; the timeline for mass adoption is uncertain in years but not in decades; and the best response to all of the above is to build, deploy, and watch what happens.**
+
+---
+
+## Reveal
+
+You've now finished 22 investigations. Here's what you should be able to do at this point:
+
+- Explain to a non-technical friend, in your own words, **why on-chain privacy matters** — not just as a feeling, but as a structural property.
+- Sketch the rough cryptographic foundations of zero-knowledge proofs without using any term you wouldn't use with that same friend.
+- Articulate why **Aztec specifically** made the architectural choices it made — hybrid state, Noir, native AA — and what those choices unlock.
+- Name at least three concrete application categories where Aztec is well-suited and explain *why* the architecture fits.
+- Describe the rough shape of where this trend is heading — privacy-by-default web, selective-disclosure economy — without having to take "the future will be better" on faith.
+- And, importantly, **name what you don't know** — the open questions in cryptography, regulation, commercial adoption, and political contestation that will determine how this story actually plays out.
+
+This last bullet is what separates a useful understanding of a technology from a useful understanding of *anything*. The case is strong. The case is not closed. The work is real. The work is not finished. The next ten years are where it gets decided.
+
+*Noiro stands up. The sun is starting to come up over the city behind him. The map below is fully lit — every pyramid you've worked is visible.*
+
+"That's the file, kid. Twenty-two cases. All connected. All real. None settled — but none of them speculation either. The cryptography exists. The chain exists. The applications exist. What's missing is **time**, **adoption**, and **the decisions a few thousand people are going to make over the next decade about how this technology gets deployed.**"
+
+*He turns to face the reader directly.*
+
+"You're one of those few thousand now. You finished the Codex. You know more about programmable privacy than 99% of the people in crypto, and 99.9% of the people outside it. What you do with that — whether you build, advocate, invest, regulate, vote, or just understand — is the part this Codex doesn't write. That part is up to you."
+
+*He tips the brim of his fedora.*
+
+"Case closed."
+
+## Codex Card
+
+> **The honest unknowns**
+> Aztec, ZK, and the privacy-by-default vision face real open questions — and naming them honestly is the only way to actually answer them.
+> *Why it matters: it closes the Codex on intellectual honesty rather than triumphalism, leaving readers equipped to follow the conversation.*
+
+## Code (optional)
+
+```rust
+// One last code snippet. Not Noir this time. Just a manifest, in pseudo-code,
+// of what you've earned by finishing the Codex.
+
+const completed_codex = {
+    investigations: 22,
+    acts: 5,
+    key_concepts: [
+        "Public-by-default chains",
+        "The mixer dead-end",
+        "The surveillance premium",
+        "Compliance vs privacy is a false dichotomy",
+        "Zero-knowledge proofs",
+        "What makes a ZK proof useful at scale",
+        "Recursive proofs",
+        "Why ZK won (for blockchain)",
+        "Aztec's hybrid state model",
+        "Noir as a ZK domain-specific language",
+        "Native account abstraction",
+        "Where Aztec sits in the ZK landscape",
+        "The anatomy of a private Aztec transaction",
+        "Private DeFi",
+        "Privacy-preserving identity",
+        "Private + verifiable voting",
+        "Selective disclosure for compliance",
+        "Applications requiring hidden state",
+        "Zero-knowledge machine learning",
+        "Privacy as the default, not the exception",
+        "The selective-disclosure economy",
+        "The honest unknowns",
+    ],
+    earned_status: "FILE CLOSED",
+    next_action: "Your call.",
+};
+```
+
+*Annotation: This is the end of the Codex. Whatever you do next — read the actual Aztec docs, write a Noir program, deploy a private contract, advocate for selective disclosure in your industry, or just hold the picture in your head — you have what you need. The cryptography is no longer an arcane subject. The chain is no longer a black box. The applications are no longer speculative. You can see them. You can talk about them. You can decide where you stand.*
