@@ -1,8 +1,7 @@
-import { AnimatePresence } from "framer-motion";
 import { useGameStore } from "./store/useGameStore";
 import { IntroScreen } from "./components/IntroScreen";
-import { MapScreen } from "./components/MapScreen";
-import { InvestigationViewer } from "./components/InvestigationViewer";
+import { MapView } from "./components/MapView";
+import { SceneFlow } from "./components/SceneFlow";
 import { CodexPanel } from "./components/CodexPanel";
 
 export function App() {
@@ -13,18 +12,21 @@ export function App() {
     return <IntroScreen />;
   }
 
+  // Hide the heavy SVG map while a scene flow is open — keeps the page from
+  // re-rasterizing two full-screen layers at once.
+  if (currentInvestigation) {
+    return (
+      <div className="min-h-screen bg-ink text-paper">
+        <CodexPanel />
+        <SceneFlow key={currentInvestigation} slug={currentInvestigation} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-ink text-paper">
-      <MapScreen />
+      <MapView />
       <CodexPanel />
-      <AnimatePresence mode="wait">
-        {currentInvestigation && (
-          <InvestigationViewer
-            key={currentInvestigation}
-            slug={currentInvestigation}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
